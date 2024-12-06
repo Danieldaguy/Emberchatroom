@@ -3,82 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatroom</title>
+  <title>Ember Chatroom</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      background-color: #181818;
+      color: #fff;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f4f8;
     }
+
+    h1 {
+      font-size: 2.5em;
+      color: #FF6F00;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    }
+
     #chat-container {
       width: 90%;
-      max-width: 500px;
-      margin-top: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 16px;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 20px;
-    }
+
     #messages {
-      max-height: 300px;
+      height: 300px;
       overflow-y: auto;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #f9f9f9;
+      background: #333;
+      border-radius: 10px;
+      border: 1px solid #444;
     }
+
     #messages div {
-      margin-bottom: 10px;
-      padding: 8px;
-      background: #e9ecef;
-      border-radius: 5px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #444;
+      border-radius: 8px;
     }
-    #messages .username {
+
+    .username {
       font-weight: bold;
-      color: #007bff;
+      color: #FF6F00;
     }
-    #messages .timestamp {
+
+    .timestamp {
       font-size: 0.8em;
-      color: #888;
+      color: #bbb;
     }
+
+    .edit-button, .delete-button {
+      background: #FF6F00;
+      color: white;
+      border: none;
+      padding: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .edit-button:hover, .delete-button:hover {
+      background: #ff8f33;
+    }
+
     #send-form {
       display: flex;
       gap: 10px;
     }
+
     input[type="text"] {
       flex: 1;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      padding: 8px 16px;
+      padding: 12px;
       border: none;
-      background-color: #007bff;
+      background: #444;
       color: white;
-      border-radius: 4px;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      background-color: #FF6F00;
+      color: white;
+      border-radius: 8px;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #0056b3;
+      background-color: #ff8f33;
     }
-    #username-input {
-      margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+
+    #emoji-button {
+      background-color: #FF6F00;
     }
-    /* Modal Styles */
+
     #emoji-modal {
       display: none;
       position: fixed;
@@ -86,24 +111,46 @@
       left: 50%;
       transform: translate(-50%, -50%);
       padding: 20px;
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      background: #333;
+      box-shadow: 0 0 15px rgba(0,0,0,0.8);
       z-index: 100;
-      border-radius: 8px;
+      border-radius: 10px;
     }
+
     #emoji-modal .emoji {
       cursor: pointer;
       font-size: 2rem;
       margin: 5px;
     }
+
     #emoji-modal button {
+      background-color: #FF6F00;
+      color: white;
+      border-radius: 5px;
+      padding: 10px;
+      border: none;
       margin-top: 10px;
-      background-color: #007bff;
     }
+
+    #clear-chat-btn {
+      display: none;
+      background-color: #D9534F;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #clear-chat-btn:hover {
+      background-color: #c9302c;
+    }
+
   </style>
 </head>
 <body>
-  <h1>Chatroom</h1>
+  <h1>Ember Chatroom</h1>
   <div id="chat-container">
     <div id="username-container">
       <input type="text" id="username-input" placeholder="Enter your username" required />
@@ -114,12 +161,12 @@
       <button type="submit">Send</button>
       <button type="button" id="emoji-button">😀</button>
     </form>
+    <button id="clear-chat-btn">Clear Chat</button>
   </div>
 
   <!-- Modal for Emojis -->
   <div id="emoji-modal">
     <div id="emoji-list">
-      <!-- Add emojis -->
       <span class="emoji" data-emoji="😁">😁</span>
       <span class="emoji" data-emoji="😂">😂</span>
       <span class="emoji" data-emoji="😎">😎</span>
@@ -131,6 +178,16 @@
       <span class="emoji" data-emoji="🥳">🥳</span>
       <span class="emoji" data-emoji="🔥">🔥</span>
       <span class="emoji" data-emoji="🤩">🤩</span>
+      <span class="emoji" data-emoji="✨">✨</span>
+      <span class="emoji" data-emoji="💥">💥</span>
+      <span class="emoji" data-emoji="🎶">🎶</span>
+      <span class="emoji" data-emoji="💀">💀</span>
+      <span class="emoji" data-emoji="💯">💯</span>
+      <span class="emoji" data-emoji="🤔">🤔</span>
+      <span class="emoji" data-emoji="🙌">🙌</span>
+      <span class="emoji" data-emoji="👀">👀</span>
+      <span class="emoji" data-emoji="😜">😜</span>
+      <span class="emoji" data-emoji="💪">💪</span>
     </div>
     <button id="close-emoji-modal">Close</button>
   </div>
@@ -165,26 +222,48 @@
     const emojiModal = document.getElementById("emoji-modal");
     const closeEmojiModal = document.getElementById("close-emoji-modal");
     const emojiList = document.getElementById("emoji-list");
+    const clearChatBtn = document.getElementById("clear-chat-btn");
 
     // Reference to the "messages" in the database
     const messagesRef = ref(db, "messages");
 
-    // Store username and check for Emberadmin
-    let isAdmin = false;
+    // Get stored username from localStorage
+    let username = localStorage.getItem("username") || ""; 
 
-    // Load existing messages and listen for new ones
+    if (username) {
+      usernameInput.value = username;
+      toggleClearChatButton(username);
+    }
+
+    // Event listener for username input field
+    usernameInput.addEventListener("input", () => {
+      username = usernameInput.value.trim();
+      localStorage.setItem("username", username);
+      toggleClearChatButton(username);
+    });
+
+    function toggleClearChatButton(username) {
+      if (username === "EmberAdmin") {
+        clearChatBtn.style.display = "block"; 
+      } else {
+        clearChatBtn.style.display = "none";
+      }
+    }
+
+    let isAdmin = false; 
+
+    // Firebase listener for messages
     onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       messagesDiv.innerHTML = ""; // Clear messagesDiv
       for (const id in data) {
         const message = data[id];
         const messageElement = document.createElement("div");
-        
+
         // Convert URLs to hyperlinks
         const messageText = message.text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-        
+
         messageElement.innerHTML = `
-          <img src="${message.pfp}" alt="${message.username}'s profile picture" width="30" height="30" style="border-radius: 50%; margin-right: 10px;">
           <span class="username">${message.username}</span>: ${messageText}
           <span class="timestamp">${message.timestamp}</span>
           <button class="edit-button" data-id="${id}">✍</button>
@@ -221,12 +300,14 @@
     sendForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const messageText = messageInput.value.trim();
-      const username = usernameInput.value.trim() || "Anonymous"; // Default username if not provided
       const pfp = "https://www.example.com/default-pfp.gif"; // Default profile picture (can be uploaded by users)
       if (messageText === "") return;
 
       // Check if the user is an admin
-      isAdmin = username.includes("Emberadmin");
+      isAdmin = username === "EmberAdmin";
+
+      // Show or hide clear chat button
+      toggleClearChatButton(username);
 
       // Push the message to Firebase
       push(messagesRef, {
@@ -237,6 +318,13 @@
       });
 
       messageInput.value = ""; // Clear input field
+    });
+
+    // Clear Chat Button
+    clearChatBtn.addEventListener("click", () => {
+      messagesDiv.innerHTML = ""; // Clear the displayed messages
+      // Clear messages from Firebase
+      update(ref(db, "messages"), null);
     });
 
     // Emoji Button click
