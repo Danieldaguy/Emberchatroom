@@ -12,6 +12,7 @@
       align-items: center;
       margin: 0;
       padding: 0;
+      background-color: #f0f4f8;
     }
     #chat-container {
       width: 90%;
@@ -20,8 +21,12 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       padding: 16px;
-      background-color: #f9f9f9;
+      background-color: #fff;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
     }
     #messages {
       max-height: 300px;
@@ -30,10 +35,17 @@
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 8px;
-      background: #fff;
+      background: #f9f9f9;
     }
     #messages div {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #e9ecef;
+      border-radius: 5px;
+    }
+    #messages .username {
+      font-weight: bold;
+      color: #007bff;
     }
     #send-form {
       display: flex;
@@ -56,22 +68,69 @@
     button:hover {
       background-color: #0056b3;
     }
+    #username-input {
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Modal Styles */
+    #emoji-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      border-radius: 8px;
+    }
+    #emoji-modal .emoji {
+      cursor: pointer;
+      font-size: 2rem;
+      margin: 5px;
+    }
+    #emoji-modal button {
+      margin-top: 10px;
+      background-color: #007bff;
+    }
   </style>
 </head>
 <body>
   <h1>Chatroom</h1>
   <div id="chat-container">
+    <div id="username-container">
+      <input type="text" id="username-input" placeholder="Enter your username" required />
+    </div>
     <div id="messages"></div>
     <form id="send-form">
       <input type="text" id="message-input" placeholder="Type your message..." required />
       <button type="submit">Send</button>
+      <button type="button" id="emoji-button">😀</button>
     </form>
+  </div>
+
+  <!-- Modal for Emojis -->
+  <div id="emoji-modal">
+    <div id="emoji-list">
+      <span class="emoji" data-emoji="😁">😁</span>
+      <span class="emoji" data-emoji="😂">😂</span>
+      <span class="emoji" data-emoji="😎">😎</span>
+      <span class="emoji" data-emoji="❤️">❤️</span>
+      <span class="emoji" data-emoji="🎉">🎉</span>
+      <span class="emoji" data-emoji="😊">😊</span>
+      <span class="emoji" data-emoji="😢">😢</span>
+      <span class="emoji" data-emoji="😡">😡</span>
+    </div>
+    <button id="close-emoji-modal">Close</button>
   </div>
 
   <script type="module">
     // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
     // Firebase configuration
     const firebaseConfig = {
@@ -93,6 +152,11 @@
     const messagesDiv = document.getElementById("messages");
     const messageInput = document.getElementById("message-input");
     const sendForm = document.getElementById("send-form");
+    const usernameInput = document.getElementById("username-input");
+    const emojiButton = document.getElementById("emoji-button");
+    const emojiModal = document.getElementById("emoji-modal");
+    const closeEmojiModal = document.getElementById("close-emoji-modal");
+    const emojiList = document.getElementById("emoji-list");
 
     // Reference to the "messages" in the database
     const messagesRef = ref(db, "messages");
@@ -104,8 +168,36 @@
       for (const id in data) {
         const message = data[id];
         const messageElement = document.createElement("div");
-        messageElement.textContent = `${message.timestamp}: ${message.text}`;
+        messageElement.innerHTML = `
+          <span class="username">${message.username}</span>: ${message.text} 
+          <span class="timestamp">${message.timestamp}</span>
+          <button class="edit-button" data-id="${id}">Edit</button>
+          <button class="delete-button" data-id="${id}">Delete</button>
+        `;
         messagesDiv.appendChild(messageElement);
+
+        // Edit Button Event Listener
+        messageElement.querySelector(".edit-button").addEventListener("click", () => {
+          if (message.username === usernameInput.value.trim()) {
+            messageInput.value = message.text;
+            sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
+            sendForm.addEventListener("submit", () => {
+              update(ref(db, "messages/" + id), {
+                text: messageInput.value.trim(),
+                username: message.username,
+                timestamp: new Date().toLocaleTimeString(),
+              });
+              messageInput.value = "";
+            });
+          }
+        });
+
+        // Delete Button Event Listener
+        messageElement.querySelector(".delete-button").addEventListener("click", () => {
+          if (message.username === usernameInput.value.trim()) {
+            remove(ref(db, "messages/" + id));
+          }
+        });
       }
       messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
     });
@@ -114,15 +206,35 @@
     sendForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const messageText = messageInput.value.trim();
+      const username = usernameInput.value.trim() || "Anonymous"; // Default username if not provided
       if (messageText === "") return;
 
       // Push the message to Firebase
       push(messagesRef, {
         text: messageText,
+        username: username,
         timestamp: new Date().toLocaleTimeString(),
       });
 
       messageInput.value = ""; // Clear input field
+    });
+
+    // Emoji Button click
+    emojiButton.addEventListener("click", () => {
+      emojiModal.style.display = "block";
+    });
+
+    // Close Emoji Modal
+    closeEmojiModal.addEventListener("click", () => {
+      emojiModal.style.display = "none";
+    });
+
+    // Insert selected emoji into the message input field
+    emojiList.addEventListener("click", (event) => {
+      if (event.target && event.target.classList.contains("emoji")) {
+        const emoji = event.target.getAttribute("data-emoji");
+        messageInput.value += emoji; // Insert emoji at the end of the message input
+      }
     });
   </script>
 </body>
