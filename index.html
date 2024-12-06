@@ -123,6 +123,18 @@
       <span class="emoji" data-emoji="😊">😊</span>
       <span class="emoji" data-emoji="😢">😢</span>
       <span class="emoji" data-emoji="😡">😡</span>
+      <span class="emoji" data-emoji="🥺">🥺</span>
+      <span class="emoji" data-emoji="😍">😍</span>
+      <span class="emoji" data-emoji="😜">😜</span>
+      <span class="emoji" data-emoji="😅">😅</span>
+      <span class="emoji" data-emoji="🙄">🙄</span>
+      <span class="emoji" data-emoji="🥳">🥳</span>
+      <span class="emoji" data-emoji="😏">😏</span>
+      <span class="emoji" data-emoji="😜">😜</span>
+      <span class="emoji" data-emoji="💪">💪</span>
+      <span class="emoji" data-emoji="👑">👑</span>
+      <span class="emoji" data-emoji="🤡">🤡</span>
+      <span class="emoji" data-emoji="💀">💀</span>
     </div>
     <button id="close-emoji-modal">Close</button>
   </div>
@@ -176,9 +188,15 @@
         `;
         messagesDiv.appendChild(messageElement);
 
+        // Allow Emberadmin to edit and delete any message
+        if (usernameInput.value.trim().toLowerCase() === "emberadmin") {
+          messageElement.querySelector(".edit-button").style.display = "inline";
+          messageElement.querySelector(".delete-button").style.display = "inline";
+        }
+
         // Edit Button Event Listener
         messageElement.querySelector(".edit-button").addEventListener("click", () => {
-          if (message.username === usernameInput.value.trim()) {
+          if (message.username === usernameInput.value.trim() || usernameInput.value.trim().toLowerCase() === "emberadmin") {
             messageInput.value = message.text;
             sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
             sendForm.addEventListener("submit", () => {
@@ -194,46 +212,44 @@
 
         // Delete Button Event Listener
         messageElement.querySelector(".delete-button").addEventListener("click", () => {
-          if (message.username === usernameInput.value.trim()) {
+          if (message.username === usernameInput.value.trim() || usernameInput.value.trim().toLowerCase() ==="emberadmin") {
             remove(ref(db, "messages/" + id));
+            messageInput.value = ""; // Clear message input after deletion
           }
         });
       }
-      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
     });
 
-    // Send a new message
+    // Handle form submission to send a message
     sendForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const messageText = messageInput.value.trim();
-      const username = usernameInput.value.trim() || "Anonymous"; // Default username if not provided
-      if (messageText === "") return;
-
-      // Push the message to Firebase
-      push(messagesRef, {
-        text: messageText,
-        username: username,
-        timestamp: new Date().toLocaleTimeString(),
-      });
-
-      messageInput.value = ""; // Clear input field
+      const username = usernameInput.value.trim();
+      if (messageText && username) {
+        push(messagesRef, {
+          username: username,
+          text: messageText,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+        messageInput.value = ""; // Clear the message input after sending
+      }
     });
 
-    // Emoji Button click
+    // Emoji button click event
     emojiButton.addEventListener("click", () => {
-      emojiModal.style.display = "block";
+      emojiModal.style.display = "block"; // Show emoji modal
     });
 
-    // Close Emoji Modal
+    // Close emoji modal
     closeEmojiModal.addEventListener("click", () => {
-      emojiModal.style.display = "none";
+      emojiModal.style.display = "none"; // Close emoji modal
     });
 
-    // Insert selected emoji into the message input field
-    emojiList.addEventListener("click", (event) => {
-      if (event.target && event.target.classList.contains("emoji")) {
-        const emoji = event.target.getAttribute("data-emoji");
-        messageInput.value += emoji; // Insert emoji at the end of the message input
+    // Add emoji to the message input when clicked
+    emojiList.addEventListener("click", (e) => {
+      if (e.target.classList.contains("emoji")) {
+        messageInput.value += e.target.dataset.emoji; // Add selected emoji to the input
+        emojiModal.style.display = "none"; // Close emoji modal after selection
       }
     });
   </script>
