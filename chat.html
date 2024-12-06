@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatroom</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+    #chat-container {
+      width: 90%;
+      max-width: 500px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 16px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    #messages {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+    #messages div {
+      margin-bottom: 8px;
+    }
+    #send-form {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chatroom</h1>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <form id="send-form">
+      <input type="text" id="message-input" placeholder="Type your message..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script type="module">
+    // Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
+      authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
+      databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
+      projectId: "ember-studios-chatroom-73885",
+      storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
+      messagingSenderId: "563168350862",
+      appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
+      measurementId: "G-LQDGZVJ2JM"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // DOM Elements
+    const messagesDiv = document.getElementById("messages");
+    const messageInput = document.getElementById("message-input");
+    const sendForm = document.getElementById("send-form");
+
+    // Reference to the "messages" in the database
+    const messagesRef = ref(db, "messages");
+
+    // Load existing messages and listen for new ones
+    onValue(messagesRef, (snapshot) => {
+      const data = snapshot.val();
+      messagesDiv.innerHTML = ""; // Clear messagesDiv
+      for (const id in data) {
+        const message = data[id];
+        const messageElement = document.createElement("div");
+        messageElement.textContent = `${message.timestamp}: ${message.text}`;
+        messagesDiv.appendChild(messageElement);
+      }
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+    });
+
+    // Send a new message
+    sendForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const messageText = messageInput.value.trim();
+      if (messageText === "") return;
+
+      // Push the message to Firebase
+      push(messagesRef, {
+        text: messageText,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+
+      messageInput.value = ""; // Clear input field
+    });
+  </script>
+</body>
+</html>
