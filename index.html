@@ -150,7 +150,6 @@
       <span class="emoji" data-emoji="🙄">🙄</span>
       <span class="emoji" data-emoji="🥳">🥳</span>
       <span class="emoji" data-emoji="😏">😏</span>
-      <span class="emoji" data-emoji="😜">😜</span>
       <span class="emoji" data-emoji="💪">💪</span>
       <span class="emoji" data-emoji="👑">👑</span>
       <span class="emoji" data-emoji="🤡">🤡</span>
@@ -159,163 +158,162 @@
     <button id="close-emoji-modal">Close</button>
   </div>
 
-  <script type="module">
-    // Import Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
-      authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
-      databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
-      projectId: "ember-studios-chatroom-73885",
-      storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
-      messagingSenderId: "563168350862",
-      appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
-      measurementId: "G-LQDGZVJ2JM"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // DOM Elements
-    const messagesDiv = document.getElementById("messages");
-    const messageInput = document.getElementById("message-input");
-    const sendForm = document.getElementById("send-form");
-    const usernameInput = document.getElementById("username-input");
-    const emojiButton = document.getElementById("emoji-button");
-    const emojiModal = document.getElementById("emoji-modal");
-    const closeEmojiModal = document.getElementById("close-emoji-modal");
-    const emojiList = document.getElementById("emoji-list");
-    const imageUpload = document.getElementById("image-upload");
-
-    // Reference to the "messages" in the database
-    const messagesRef = ref(db, "messages");
-
-    // Load existing messages and listen for new ones
-    onValue(messagesRef, (snapshot) => {
-      const data = snapshot.val();
-      messagesDiv.innerHTML = ""; // Clear messagesDiv
-      for (const id in data) {
-        const message = data[id];
-        const messageElement = document.createElement("div");
-        const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        messageElement.innerHTML = `
-          <span class="username">${message.username}</span> 
-          <span class="timestamp">${formattedTime}</span>
-          <p>${message.text}</p>
-          ${message.image ? `<img src="${message.image}" alt="image" style="max-width: 100px; max-height: 100px;"/>` : ""}
-          <button class="edit-button" onclick="editMessage('${id}')">✍️</button>
-          <button class="delete-button" onclick="deleteMessage('${id}')">🗑️</button>
-        `;
-        
-        // Display buttons only for Emberadmin
-        if (message.username === "Emberadmin") {
-          messageElement.querySelector('.edit-button').style.display = 'block';
-          messageElement.querySelector('.delete-button').style.display = 'block';
-        }
-
-        messageElement.addEventListener('mouseenter', () => {
-          messageElement.querySelector('.edit-button').style.display = 'block';
-          messageElement.querySelector('.delete-button').style.display = 'block';
-        });
-
-        messageElement.addEventListener('mouseleave', () => {
-          if (message.username !== "Emberadmin") {
-            messageElement.querySelector('.edit-button').style.display = 'none';
-            messageElement.querySelector('.delete-button').style.display = 'none';
+ <script type="module">
+      // Import Firebase SDKs
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+      import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
+        authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
+        databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
+        projectId: "ember-studios-chatroom-73885",
+        storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
+        messagingSenderId: "563168350862",
+        appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
+        measurementId: "G-LQDGZVJ2JM"
+      };
+    
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+    
+      // DOM Elements
+      const messagesDiv = document.getElementById("messages");
+      const messageInput = document.getElementById("message-input");
+      const sendForm = document.getElementById("send-form");
+      const usernameInput = document.getElementById("username-input");
+      const emojiButton = document.getElementById("emoji-button");
+      const emojiModal = document.getElementById("emoji-modal");
+      const closeEmojiModal = document.getElementById("close-emoji-modal");
+      const emojiList = document.getElementById("emoji-list");
+      const imageUpload = document.getElementById("image-upload");
+    
+      // Reference to the "messages" in the database
+      const messagesRef = ref(db, "messages");
+    
+      // Load existing messages and listen for new ones
+      onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        messagesDiv.innerHTML = ""; // Clear messagesDiv
+        for (const id in data) {
+          const message = data[id];
+          const messageElement = document.createElement("div");
+          const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+          messageElement.innerHTML = `
+            <span class="username">${message.username}</span> 
+            <span class="timestamp">${formattedTime}</span>
+            <p>${message.text}</p>
+            ${message.image ? `<img src="${message.image}" alt="image" style="max-width: 100px; max-height: 100px;"/>` : ""}
+            <button class="edit-button" onclick="editMessage('${id}')">✍️</button>
+            <button class="delete-button" onclick="deleteMessage('${id}')">🗑️</button>
+          `;
+    
+          // Display buttons only for Emberadmin
+          if (message.username === "Emberadmin") {
+            messageElement.querySelector('.edit-button').style.display = 'block';
+            messageElement.querySelector('.delete-button').style.display = 'block';
           }
-        });
-
-        messagesDiv.appendChild(messageElement);
-      }
-    });
-
-    // Send message
-    sendForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const username = usernameInput.value.trim();
-      const messageText = messageInput.value.trim();
-      const imageFile = imageUpload.files[0];
-
-      // Prevent sending if no username or message
-      if (!username || !messageText) {
-        alert("Username and message are required!");
-        return;
-      }
-
-      // Check if the username is taken
-      const allMessages = messagesDiv.querySelectorAll(".username");
-      for (const user of allMessages) {
-        if (user.textContent === username) {
-          alert("This username is already taken!");
+    
+          messageElement.addEventListener('mouseenter', () => {
+            messageElement.querySelector('.edit-button').style.display = 'block';
+            messageElement.querySelector('.delete-button').style.display = 'block';
+          });
+    
+          messageElement.addEventListener('mouseleave', () => {
+            if (message.username !== "Emberadmin") {
+              messageElement.querySelector('.edit-button').style.display = 'none';
+              messageElement.querySelector('.delete-button').style.display = 'none';
+            }
+          });
+    
+          messagesDiv.appendChild(messageElement);
+        }
+      });
+    
+      // Send message
+      sendForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = usernameInput.value.trim();
+        const messageText = messageInput.value.trim();
+        const imageFile = imageUpload.files[0];
+    
+        // Prevent sending if no username or message
+        if (!username || !messageText) {
+          alert("Username and message are required!");
           return;
         }
-      }
-
-      let imageUrl = "";
-      if (imageFile) {
-        const storageRef = ref(app.storage(), `images/${imageFile.name}`);
-        imageUrl = URL.createObjectURL(imageFile); // Temporarily set image URL
-      }
-
-      // Send the message to Firebase
-      const newMessage = {
-        username: username,
-        text: messageText,
-        timestamp: Date.now(),
-        image: imageUrl
-      };
-
-      push(messagesRef, newMessage).then(() => {
-        messageInput.value = ""; // Clear the message input field
-        imageUpload.value = ""; // Clear the file input
+    
+        // Check if the username is taken
+        const allMessages = messagesDiv.querySelectorAll(".username");
+        for (const user of allMessages) {
+          if (user.textContent === username) {
+            alert("This username is already taken!");
+            return;
+          }
+        }
+    
+        let imageUrl = "";
+        if (imageFile) {
+          const storageRef = ref(app.storage(), `images/${imageFile.name}`);
+          imageUrl = URL.createObjectURL(imageFile); // Temporarily set image URL
+        }
+    
+        // Send the message to Firebase
+        const newMessage = {
+          username: username,
+          text: messageText,
+          timestamp: Date.now(),
+          image: imageUrl
+        };
+    
+        push(messagesRef, newMessage).then(() => {
+          messageInput.value = ""; // Clear the message input field
+          imageUpload.value = ""; // Clear the file input
+        });
       });
-    });
-
-    // Edit message
-    function editMessage(id) {
-      const messageRef = ref(db, `messages/${id}`);
-      const messageData = snapshot.val();
-      const newMessageText = prompt("Edit your message:", messageData.text);
-      if (newMessageText) {
-        update(messageRef, { text: newMessageText });
+    
+      // Edit message
+      function editMessage(id) {
+        const messageRef = ref(db, `messages/${id}`);
+        const messageData = snapshot.val();
+        const newMessageText = prompt("Edit your message:", messageData.text);
+        if (newMessageText) {
+          update(messageRef, { text: newMessageText });
+        }
       }
-    }
-
-    // Delete message
-    function deleteMessage(id) {
-      const messageRef = ref(db, `messages/${id}`);
-      remove(messageRef);
-    }
-
-    // Emoji Modal handling
-    emojiButton.addEventListener("click", () => {
-      emojiModal.style.display = "block";
-    });
-
-    closeEmojiModal.addEventListener("click", () => {
-      emojiModal.style.display = "none";
-    });
-
-    emojiList.addEventListener("click", (e) => {
-      if (e.target.classList.contains("emoji")) {
-        messageInput.value += e.target.dataset.emoji;
+    
+      // Delete message
+      function deleteMessage(id) {
+        const messageRef = ref(db, `messages/${id}`);
+        remove(messageRef);
       }
-    });
-
-    // Username input and validation
-    usernameInput.addEventListener('input', () => {
-      if (!usernameInput.value.trim()) {
-        usernameInput.setCustomValidity("Please enter a username.");
-      } else {
-        usernameInput.setCustomValidity("");
-      }
-    });
-
-  </script>
-</body>
+    
+      // Emoji Modal handling
+      emojiButton.addEventListener("click", () => {
+        emojiModal.style.display = "block";
+      });
+    
+      closeEmojiModal.addEventListener("click", () => {
+        emojiModal.style.display = "none";
+      });
+    
+      emojiList.addEventListener("click", (e) => {
+        if (e.target.classList.contains("emoji")) {
+          messageInput.value += e.target.dataset.emoji;
+        }
+      });
+    
+      // Username input and validation
+      usernameInput.addEventListener('input', () => {
+        if (!usernameInput.value.trim()) {
+          usernameInput.setCustomValidity("Please enter a username.");
+        } else {
+          usernameInput.setCustomValidity("");
+        }
+      });
+    </script>
+  </body>
 </html>
