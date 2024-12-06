@@ -42,9 +42,28 @@
       padding: 8px;
       background: #e9ecef;
       border-radius: 5px;
+      position: relative;
     }
     #messages .username {
       font-weight: bold;
+      color: #007bff;
+    }
+    #messages .timestamp {
+      font-size: 0.8em;
+      color: #888;
+      margin-left: 10px;
+    }
+    .edit-button, .delete-button {
+      display: none;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+    .edit-button:hover, .delete-button:hover {
       color: #007bff;
     }
     #send-form {
@@ -107,6 +126,7 @@
     <div id="messages"></div>
     <form id="send-form">
       <input type="text" id="message-input" placeholder="Type your message..." required />
+      <input type="file" id="image-upload" accept="image/*" />
       <button type="submit">Send</button>
       <button type="button" id="emoji-button">😀</button>
     </form>
@@ -169,6 +189,7 @@
     const emojiModal = document.getElementById("emoji-modal");
     const closeEmojiModal = document.getElementById("close-emoji-modal");
     const emojiList = document.getElementById("emoji-list");
+    const imageUpload = document.getElementById("image-upload");
 
     // Reference to the "messages" in the database
     const messagesRef = ref(db, "messages");
@@ -180,78 +201,121 @@
       for (const id in data) {
         const message = data[id];
         const messageElement = document.createElement("div");
-        messageElement.innerHTML = `
-          <span class="username">${message.username}</span>: ${message.text} 
-          <span class="timestamp">${message.timestamp}</span>
-          <button class="edit-button" data-id="${id}">Edit</button>
-          <button class="delete-button" data-id="${id}">Delete</button>
-        `;
-        messagesDiv.appendChild(messageElement);
+        const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        // Allow Emberadmin to edit and delete any message
-        if (usernameInput.value.trim().toLowerCase() === "emberadmin") {
-          messageElement.querySelector(".edit-button").style.display = "inline";
-          messageElement.querySelector(".delete-button").style.display = "inline";
+        messageElement.innerHTML = `
+          <span class="username">${message.username}</span> 
+          <span class="timestamp">${formattedTime}</span>
+          <p>${message.text}</p>
+          ${message.image ? `<img src="${message.image}" alt="image" style="max-width: 100px; max-height: 100px;"/>` : ""}
+          <button class="edit-button" onclick="editMessage('${id}')">✍️</button>
+          <button class="delete-button" onclick="deleteMessage('${id}')">🗑️</button>
+        `;
+        
+        // Display buttons only for Emberadmin
+        if (message.username === "Emberadmin") {
+          messageElement.querySelector('.edit-button').style.display = 'block';
+          messageElement.querySelector('.delete-button').style.display = 'block';
         }
 
-        // Edit Button Event Listener
-        messageElement.querySelector(".edit-button").addEventListener("click", () => {
-          if (message.username === usernameInput.value.trim() || usernameInput.value.trim().toLowerCase() === "emberadmin") {
-            messageInput.value = message.text;
-            sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
-            sendForm.addEventListener("submit", () => {
-              update(ref(db, "messages/" + id), {
-                text: messageInput.value.trim(),
-                username: message.username,
-                timestamp: new Date().toLocaleTimeString(),
-              });
-              messageInput.value = "";
-            });
+        messageElement.addEventListener('mouseenter', () => {
+          messageElement.querySelector('.edit-button').style.display = 'block';
+          messageElement.querySelector('.delete-button').style.display = 'block';
+        });
+
+        messageElement.addEventListener('mouseleave', () => {
+          if (message.username !== "Emberadmin") {
+            messageElement.querySelector('.edit-button').style.display = 'none';
+            messageElement.querySelector('.delete-button').style.display = 'none';
           }
         });
 
-        // Delete Button Event Listener
-        messageElement.querySelector(".delete-button").addEventListener("click", () => {
-          if (message.username === usernameInput.value.trim() || usernameInput.value.trim().toLowerCase() ==="emberadmin") {
-            remove(ref(db, "messages/" + id));
-            messageInput.value = ""; // Clear message input after deletion
-          }
-        });
+        messagesDiv.appendChild(messageElement);
       }
     });
 
-    // Handle form submission to send a message
+    // Send message
     sendForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const messageText = messageInput.value.trim();
       const username = usernameInput.value.trim();
-      if (messageText && username) {
-        push(messagesRef, {
-          username: username,
-          text: messageText,
-          timestamp: new Date().toLocaleTimeString(),
-        });
-        messageInput.value = ""; // Clear the message input after sending
+      const messageText = messageInput.value.trim();
+      const imageFile = imageUpload.files[0];
+
+      // Prevent sending if no username or message
+      if (!username || !messageText) {
+        alert("Username and message are required!");
+        return;
       }
+
+      // Check if the username is taken
+      const allMessages = messagesDiv.querySelectorAll(".username");
+      for (const user of allMessages) {
+        if (user.textContent === username) {
+          alert("This username is already taken!");
+          return;
+        }
+      }
+
+      let imageUrl = "";
+      if (imageFile) {
+        const storageRef = ref(app.storage(), `images/${imageFile.name}`);
+        imageUrl = URL.createObjectURL(imageFile); // Temporarily set image URL
+      }
+
+      // Send the message to Firebase
+      const newMessage = {
+        username: username,
+        text: messageText,
+        timestamp: Date.now(),
+        image: imageUrl
+      };
+
+      push(messagesRef, newMessage).then(() => {
+        messageInput.value = ""; // Clear the message input field
+        imageUpload.value = ""; // Clear the file input
+      });
     });
 
-    // Emoji button click event
+    // Edit message
+    function editMessage(id) {
+      const messageRef = ref(db, `messages/${id}`);
+      const messageData = snapshot.val();
+      const newMessageText = prompt("Edit your message:", messageData.text);
+      if (newMessageText) {
+        update(messageRef, { text: newMessageText });
+      }
+    }
+
+    // Delete message
+    function deleteMessage(id) {
+      const messageRef = ref(db, `messages/${id}`);
+      remove(messageRef);
+    }
+
+    // Emoji Modal handling
     emojiButton.addEventListener("click", () => {
-      emojiModal.style.display = "block"; // Show emoji modal
+      emojiModal.style.display = "block";
     });
 
-    // Close emoji modal
     closeEmojiModal.addEventListener("click", () => {
-      emojiModal.style.display = "none"; // Close emoji modal
+      emojiModal.style.display = "none";
     });
 
-    // Add emoji to the message input when clicked
     emojiList.addEventListener("click", (e) => {
       if (e.target.classList.contains("emoji")) {
-        messageInput.value += e.target.dataset.emoji; // Add selected emoji to the input
-        emojiModal.style.display = "none"; // Close emoji modal after selection
+        messageInput.value += e.target.dataset.emoji;
       }
     });
+
+    // Username input and validation
+    usernameInput.addEventListener('input', () => {
+      if (!usernameInput.value.trim()) {
+        usernameInput.setCustomValidity("Please enter a username.");
+      } else {
+        usernameInput.setCustomValidity("");
+      }
+    });
+
   </script>
 </body>
 </html>
