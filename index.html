@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lit Chat V1 | 🔥•Ember Studios•🔥 | Chatroom</title>
+  <title>Ember Chatroom</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -18,7 +18,7 @@
 
     h1 {
       font-size: 2.5em;
-      color: #ffdc00;
+      color: #FF6F00;
       margin-top: 30px;
       margin-bottom: 20px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
@@ -52,7 +52,7 @@
 
     .username {
       font-weight: bold;
-      color: #ffdc00;
+      color: #FF6F00;
     }
 
     .timestamp {
@@ -61,7 +61,7 @@
     }
 
     .edit-button, .delete-button {
-      background: #ffdc00;
+      background: #FF6F00;
       color: white;
       border: none;
       padding: 5px;
@@ -70,7 +70,7 @@
     }
 
     .edit-button:hover, .delete-button:hover {
-      background: #d9bc05;
+      background: #ff8f33;
     }
 
     #send-form {
@@ -90,18 +90,18 @@
     button {
       padding: 12px 20px;
       border: none;
-      background-color: #ffdc00;
+      background-color: #FF6F00;
       color: white;
       border-radius: 8px;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #d9bc05;
+      background-color: #ff8f33;
     }
 
     #emoji-button {
-      background-color: #ffdc00;
+      background-color: #FF6F00;
     }
 
     #emoji-modal {
@@ -124,7 +124,7 @@
     }
 
     #emoji-modal button {
-      background-color: #ffdc00;
+      background-color: #FF6F00;
       color: white;
       border-radius: 5px;
       padding: 10px;
@@ -146,27 +146,13 @@
     #clear-chat-btn:hover {
       background-color: #c9302c;
     }
-    
-    #username-container {
-      padding: 20px 0;
-    }
-    
-    #Update-btn { 
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
 
   </style>
 </head>
 <body>
-  <h1>🔥•LitChat V1•🔥</h1>
-<h5>By 🔥•Ember Studios•🔥</h5>
+  <h1>🗣️💯Chatroom</h1>
   <div id="chat-container">
     <div id="username-container">
-      Username:
       <input type="text" id="username-input" placeholder="Enter your username" required />
     </div>
     <div id="messages"></div>
@@ -176,9 +162,6 @@
       <button type="button" id="emoji-button">😀</button>
     </form>
     <button id="clear-chat-btn">Clear Chat</button>
-  <a href="update.html">
-    <button id="Update-btn">Update Log</button>
-  </a>
   </div>
 
   <!-- Modal for Emojis -->
@@ -205,14 +188,13 @@
       <span class="emoji" data-emoji="👀">👀</span>
       <span class="emoji" data-emoji="😜">😜</span>
       <span class="emoji" data-emoji="💪">💪</span>
-      <span class="emoji" data-emoji="🖕">🖕</span>
       <span class="emoji" data-emoji="🤓">🤓</span>
-      <span class="emoji" data-emoji="🍆">🍆</span>
+      <span class="emoji" data-emoji="🖕">🖕</span>
     </div>
     <button id="close-emoji-modal">Close</button>
   </div>
 
-    <script type="module">
+  <script type="module">
     // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
@@ -283,12 +265,12 @@
         // Convert URLs to hyperlinks
         const messageText = message.text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
-        messageElement.innerHTML = 
+        messageElement.innerHTML = `
           <span class="username">${message.username}</span>: ${messageText}
           <span class="timestamp">${message.timestamp}</span>
           <button class="edit-button" data-id="${id}">✍</button>
           <button class="delete-button" data-id="${id}">🗑</button>
-        ;
+        `;
         messagesDiv.appendChild(messageElement);
 
         // Admin privileges: Edit and Delete for all messages
@@ -367,4 +349,5 @@
   </script>
 </body>
 </html>
+
 
