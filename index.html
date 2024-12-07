@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ember Chatroom</title>
+  <title>Lit Chat V1 | 🔥•Ember Studios•🔥 | Chatroom</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -18,7 +18,7 @@
 
     h1 {
       font-size: 2.5em;
-      color: #FF6F00;
+      color: #ffdc00;
       margin-top: 30px;
       margin-bottom: 20px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
@@ -52,7 +52,7 @@
 
     .username {
       font-weight: bold;
-      color: #FF6F00;
+      color: #ffdc00;
     }
 
     .timestamp {
@@ -61,7 +61,7 @@
     }
 
     .edit-button, .delete-button {
-      background: #FF6F00;
+      background: #ffdc00;
       color: white;
       border: none;
       padding: 5px;
@@ -70,7 +70,7 @@
     }
 
     .edit-button:hover, .delete-button:hover {
-      background: #ff8f33;
+      background: #d9bc05;
     }
 
     #send-form {
@@ -90,18 +90,18 @@
     button {
       padding: 12px 20px;
       border: none;
-      background-color: #FF6F00;
+      background-color: #ffdc00;
       color: white;
       border-radius: 8px;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #ff8f33;
+      background-color: #d9bc05;
     }
 
     #emoji-button {
-      background-color: #FF6F00;
+      background-color: #ffdc00;
     }
 
     #emoji-modal {
@@ -124,7 +124,7 @@
     }
 
     #emoji-modal button {
-      background-color: #FF6F00;
+      background-color: #ffdc00;
       color: white;
       border-radius: 5px;
       padding: 10px;
@@ -146,13 +146,27 @@
     #clear-chat-btn:hover {
       background-color: #c9302c;
     }
+    
+    #username-container {
+      padding: 20px 0;
+    }
+    
+    #Update-btn { 
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
 
   </style>
 </head>
 <body>
-  <h1>🗣️💯Chatroom</h1>
+  <h1>🔥•LitChat V1•🔥</h1>
+<h5>By 🔥•Ember Studios•🔥</h5>
   <div id="chat-container">
     <div id="username-container">
+      Username:
       <input type="text" id="username-input" placeholder="Enter your username" required />
     </div>
     <div id="messages"></div>
@@ -162,6 +176,9 @@
       <button type="button" id="emoji-button">😀</button>
     </form>
     <button id="clear-chat-btn">Clear Chat</button>
+  <a href="update.html">
+    <button id="Update-btn">Update Log</button>
+  </a>
   </div>
 
   <!-- Modal for Emojis -->
@@ -188,8 +205,9 @@
       <span class="emoji" data-emoji="👀">👀</span>
       <span class="emoji" data-emoji="😜">😜</span>
       <span class="emoji" data-emoji="💪">💪</span>
-      <span class="emoji" data-emoji="🤓">🤓</span>
       <span class="emoji" data-emoji="🖕">🖕</span>
+      <span class="emoji" data-emoji="🤓">🤓</span>
+      <span class="emoji" data-emoji="🍆">🍆</span>
     </div>
     <button id="close-emoji-modal">Close</button>
   </div>
