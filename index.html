@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
   <title>Lit Chat V1 | 🔥•Ember Studios•🔥 | Chatroom</title>
   <style>
     body {
@@ -213,9 +214,8 @@
   </div>
 
   <script type="module">
- // Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -244,21 +244,43 @@ const closeEmojiModal = document.getElementById("close-emoji-modal");
 const emojiList = document.getElementById("emoji-list");
 const clearChatBtn = document.getElementById("clear-chat-btn");
 
-// Reference to the "messages" in the database
+// Reference to the "messages" and "usernames" in the database
 const messagesRef = ref(db, "messages");
+const usernamesRef = ref(db, "usernames");
 
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
 
+// Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
   toggleClearChatButton(username);
 }
 
 // Event listener for username input field
-usernameInput.addEventListener("input", () => {
-  username = usernameInput.value.trim();
-  localStorage.setItem("username", username);
+usernameInput.addEventListener("input", async () => {
+  const newUsername = usernameInput.value.trim();
+  const sanitizedUsername = sanitizeText(newUsername);
+
+  // If username is different from the old one, check if it's unique
+  if (newUsername && newUsername !== username) {
+    const usernameExists = await checkUsernameUnique(sanitizedUsername);
+    if (usernameExists) {
+      alert("Username is already taken, please choose another.");
+      return;
+    }
+
+    // Remove old username from Firebase (if any)
+    if (username) {
+      await remove(ref(db, `usernames/${username.toLowerCase()}`));
+    }
+
+    // Save the new username to Firebase (case-insensitive)
+    username = sanitizedUsername;
+    localStorage.setItem("username", username);
+    update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
+  }
+
   toggleClearChatButton(username);
 });
 
@@ -280,12 +302,12 @@ onValue(messagesRef, (snapshot) => {
     const message = data[id];
     const messageElement = document.createElement("div");
 
-    // Convert URLs to hyperlinks and sanitize the text
+    // Sanitize message text to prevent any HTML or JavaScript injection
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     messageElement.innerHTML = `
-      <span class="username">${message.username}</span>: ${messageText}
+      <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
       <button class="delete-button" data-id="${id}">🗑</button>
@@ -300,7 +322,7 @@ onValue(messagesRef, (snapshot) => {
         sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
         sendForm.addEventListener("submit", () => {
           update(ref(db, "messages/" + id), {
-            text: messageInput.value.trim(),
+            text: sanitizeText(messageInput.value.trim()),
             username: message.username,
             timestamp: new Date().toLocaleTimeString(),
           });
@@ -319,15 +341,20 @@ onValue(messagesRef, (snapshot) => {
 
 // Sanitize text to prevent XSS (escaping dangerous HTML tags)
 function sanitizeText(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML; // This converts the input text to a safe HTML string
+  // Using DOMPurify to sanitize text input and remove dangerous HTML/JS
+  return DOMPurify.sanitize(text);
+}
+
+// Check if the username is unique (case-insensitive)
+async function checkUsernameUnique(username) {
+  const snapshot = await get(ref(db, `usernames/${username.toLowerCase()}`));
+  return snapshot.exists(); // Returns true if the username already exists
 }
 
 // Send a new message
 sendForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const messageText = messageInput.value.trim();
+  const messageText = sanitizeText(messageInput.value.trim());
   const pfp = "https://www.example.com/default-pfp.gif"; // Default profile picture (can be uploaded by users)
   if (messageText === "") return;
 
