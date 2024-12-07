@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lit Chat V1 | 🔥•Ember Studios•🔥 | Update</title>
+</head>
+<style>
+body {
+      font-family: 'Arial', sans-serif;
+      background-color: #181818;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #ffdc00;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    }
+    
+    p {
+      font-weight: bold;
+    }
+
+    #update-container {
+      width: 90%;
+      max-width: 600px;
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+    
+    button {
+      padding: 12px 20px;
+      border: none;
+      background-color: #ffdc00;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+</style>
+  <body>
+  <h1>🔥•LitChat V1•🔥</h1>
+<h5>By 🔥•Ember Studios•🔥</h5>
+  <div id="update-container">
+    <p>1.0 Started chat<br>
+    1.1 Added better protection like protection from xss<br>
+    1.2 Added new colors and name</p>
+    <a href="index.html"><button><- Back</button></a>
+  </div>
+
