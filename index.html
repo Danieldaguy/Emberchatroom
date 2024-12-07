@@ -146,11 +146,11 @@
     #clear-chat-btn:hover {
       background-color: #c9302c;
     }
-    
+
     #username-container {
       padding: 20px 0;
     }
-    
+
     #Update-btn { 
       padding: 10px 20px;
       border: none;
@@ -213,159 +213,168 @@
   </div>
 
   <script type="module">
-    // Import Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+ // Import Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
-      authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
-      databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
-      projectId: "ember-studios-chatroom-73885",
-      storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
-      messagingSenderId: "563168350862",
-      appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
-      measurementId: "G-LQDGZVJ2JM"
-    };
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
+  authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
+  databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
+  projectId: "ember-studios-chatroom-73885",
+  storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
+  messagingSenderId: "563168350862",
+  appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
+  measurementId: "G-LQDGZVJ2JM"
+};
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    // DOM Elements
-    const messagesDiv = document.getElementById("messages");
-    const messageInput = document.getElementById("message-input");
-    const sendForm = document.getElementById("send-form");
-    const usernameInput = document.getElementById("username-input");
-    const emojiButton = document.getElementById("emoji-button");
-    const emojiModal = document.getElementById("emoji-modal");
-    const closeEmojiModal = document.getElementById("close-emoji-modal");
-    const emojiList = document.getElementById("emoji-list");
-    const clearChatBtn = document.getElementById("clear-chat-btn");
+// DOM Elements
+const messagesDiv = document.getElementById("messages");
+const messageInput = document.getElementById("message-input");
+const sendForm = document.getElementById("send-form");
+const usernameInput = document.getElementById("username-input");
+const emojiButton = document.getElementById("emoji-button");
+const emojiModal = document.getElementById("emoji-modal");
+const closeEmojiModal = document.getElementById("close-emoji-modal");
+const emojiList = document.getElementById("emoji-list");
+const clearChatBtn = document.getElementById("clear-chat-btn");
 
-    // Reference to the "messages" in the database
-    const messagesRef = ref(db, "messages");
+// Reference to the "messages" in the database
+const messagesRef = ref(db, "messages");
 
-    // Get stored username from localStorage
-    let username = localStorage.getItem("username") || ""; 
+// Get stored username from localStorage
+let username = localStorage.getItem("username") || "";
 
-    if (username) {
-      usernameInput.value = username;
-      toggleClearChatButton(username);
-    }
+if (username) {
+  usernameInput.value = username;
+  toggleClearChatButton(username);
+}
 
-    // Event listener for username input field
-    usernameInput.addEventListener("input", () => {
-      username = usernameInput.value.trim();
-      localStorage.setItem("username", username);
-      toggleClearChatButton(username);
-    });
+// Event listener for username input field
+usernameInput.addEventListener("input", () => {
+  username = usernameInput.value.trim();
+  localStorage.setItem("username", username);
+  toggleClearChatButton(username);
+});
 
-    function toggleClearChatButton(username) {
-      if (username === "EmberAdmin") {
-        clearChatBtn.style.display = "block"; 
-      } else {
-        clearChatBtn.style.display = "none";
-      }
-    }
+function toggleClearChatButton(username) {
+  if (username === "EmberAdmin") {
+    clearChatBtn.style.display = "block";
+  } else {
+    clearChatBtn.style.display = "none";
+  }
+}
 
-    let isAdmin = false; 
+let isAdmin = false;
 
-    // Firebase listener for messages
-    onValue(messagesRef, (snapshot) => {
-      const data = snapshot.val();
-      messagesDiv.innerHTML = ""; // Clear messagesDiv
-      for (const id in data) {
-        const message = data[id];
-        const messageElement = document.createElement("div");
+// Firebase listener for messages
+onValue(messagesRef, (snapshot) => {
+  const data = snapshot.val();
+  messagesDiv.innerHTML = ""; // Clear messagesDiv
+  for (const id in data) {
+    const message = data[id];
+    const messageElement = document.createElement("div");
 
-        // Convert URLs to hyperlinks
-        const messageText = message.text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    // Convert URLs to hyperlinks and sanitize the text
+    const sanitizedText = sanitizeText(message.text);
+    const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
-        messageElement.innerHTML = `
-          <span class="username">${message.username}</span>: ${messageText}
-          <span class="timestamp">${message.timestamp}</span>
-          <button class="edit-button" data-id="${id}">✍</button>
-          <button class="delete-button" data-id="${id}">🗑</button>
-        `;
-        messagesDiv.appendChild(messageElement);
+    messageElement.innerHTML = `
+      <span class="username">${message.username}</span>: ${messageText}
+      <span class="timestamp">${message.timestamp}</span>
+      <button class="edit-button" data-id="${id}">✍</button>
+      <button class="delete-button" data-id="${id}">🗑</button>
+    `;
+    messagesDiv.appendChild(messageElement);
 
-        // Admin privileges: Edit and Delete for all messages
-        if (isAdmin) {
-          // Edit Button Event Listener
-          messageElement.querySelector(".edit-button").addEventListener("click", () => {
-            messageInput.value = message.text;
-            sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
-            sendForm.addEventListener("submit", () => {
-              update(ref(db, "messages/" + id), {
-                text: messageInput.value.trim(),
-                username: message.username,
-                timestamp: new Date().toLocaleTimeString(),
-              });
-              messageInput.value = "";
-            });
+    // Admin privileges: Edit and Delete for all messages
+    if (isAdmin) {
+      // Edit Button Event Listener
+      messageElement.querySelector(".edit-button").addEventListener("click", () => {
+        messageInput.value = message.text;
+        sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
+        sendForm.addEventListener("submit", () => {
+          update(ref(db, "messages/" + id), {
+            text: messageInput.value.trim(),
+            username: message.username,
+            timestamp: new Date().toLocaleTimeString(),
           });
-
-          // Delete Button Event Listener
-          messageElement.querySelector(".delete-button").addEventListener("click", () => {
-            remove(ref(db, "messages/" + id));
-          });
-        }
-      }
-      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
-    });
-
-    // Send a new message
-    sendForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const messageText = messageInput.value.trim();
-      const pfp = "https://www.example.com/default-pfp.gif"; // Default profile picture (can be uploaded by users)
-      if (messageText === "") return;
-
-      // Check if the user is an admin
-      isAdmin = username === "EmberAdmin";
-
-      // Show or hide clear chat button
-      toggleClearChatButton(username);
-
-      // Push the message to Firebase
-      push(messagesRef, {
-        text: messageText,
-        username: username,
-        timestamp: new Date().toLocaleTimeString(),
-        pfp: pfp, // Add the profile picture URL here
+          messageInput.value = "";
+        });
       });
 
-      messageInput.value = ""; // Clear input field
-    });
+      // Delete Button Event Listener
+      messageElement.querySelector(".delete-button").addEventListener("click", () => {
+        remove(ref(db, "messages/" + id));
+      });
+    }
+  }
+  messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+});
 
-    // Clear Chat Button
-    clearChatBtn.addEventListener("click", () => {
-      messagesDiv.innerHTML = ""; // Clear the displayed messages
-      // Clear messages from Firebase
-      update(ref(db, "messages"), null);
-    });
+// Sanitize text to prevent XSS (escaping dangerous HTML tags)
+function sanitizeText(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML; // This converts the input text to a safe HTML string
+}
 
-    // Emoji Button click
-    emojiButton.addEventListener("click", () => {
-      emojiModal.style.display = "block";
-    });
+// Send a new message
+sendForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const messageText = messageInput.value.trim();
+  const pfp = "https://www.example.com/default-pfp.gif"; // Default profile picture (can be uploaded by users)
+  if (messageText === "") return;
 
-    // Close Emoji Modal
-    closeEmojiModal.addEventListener("click", () => {
-      emojiModal.style.display = "none";
-    });
+  // Check if the user is an admin
+  isAdmin = username === "EmberAdmin";
 
-    // Insert selected emoji into the message input field
-    emojiList.addEventListener("click", (event) => {
-      if (event.target && event.target.classList.contains("emoji")) {
-        const emoji = event.target.getAttribute("data-emoji");
-        messageInput.value += emoji; // Insert emoji at the end of the message input
-      }
-    });
+  // Show or hide clear chat button
+  toggleClearChatButton(username);
+
+  // Push the message to Firebase
+  push(messagesRef, {
+    text: messageText,
+    username: username,
+    timestamp: new Date().toLocaleTimeString(),
+    pfp: pfp, // Add the profile picture URL here
+  });
+
+  messageInput.value = ""; // Clear input field
+});
+
+// Clear Chat Button
+clearChatBtn.addEventListener("click", () => {
+  messagesDiv.innerHTML = ""; // Clear the displayed messages
+  // Clear messages from Firebase
+  update(ref(db, "messages"), null); // This removes all messages from the Firebase database
+});
+
+// Emoji Button click
+emojiButton.addEventListener("click", () => {
+  emojiModal.style.display = "block";
+});
+
+// Close Emoji Modal
+closeEmojiModal.addEventListener("click", () => {
+  emojiModal.style.display = "none";
+});
+
+// Insert selected emoji into the message input field
+emojiList.addEventListener("click", (event) => {
+  if (event.target && event.target.classList.contains("emoji")) {
+    const emoji = event.target.getAttribute("data-emoji");
+    messageInput.value += emoji; // Insert emoji at the end of the message input
+  }
+});
   </script>
 </body>
 </html>
+
 
 
