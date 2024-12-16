@@ -217,7 +217,7 @@
     <button id="close-emoji-modal">Close</button>
   </div>
 
-  <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -227,26 +227,27 @@ const firebaseConfig = {
   authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
   databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
   projectId: "ember-studios-chatroom-73885",
-  storageBucket: "ember-studios-chatroom-73885.firebasestorage.app",
+  storageBucket: "ember-studios-chatroom-73885.appspot.com",
   messagingSenderId: "563168350862",
   appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
   measurementId: "G-LQDGZVJ2JM"
 };
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// Function to clear database
 async function clearDatabase() {
   try {
     const apiKey = "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU"; 
-    const databaseURL = "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com/"
-    const response = await fetch(`${databaseURL}.json?auth=${apiKey}`, {
-      method: "DELETE",
-    });
+    const databaseURL = "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com/";
+    const response = await fetch(`${databaseURL}.json?auth=${apiKey}`, { method: "DELETE" });
 
     if (response.ok) {
       console.log("Messages cleared successfully!");
     } else {
-      console.error("Error clearing Messages:", response.status, response.statusText);
+      console.error("Error clearing messages:", response.status, response.statusText);
     }
   } catch (error) {
     console.error("Request failed:", error);
@@ -263,30 +264,26 @@ const emojiModal = document.getElementById("emoji-modal");
 const closeEmojiModal = document.getElementById("close-emoji-modal");
 const emojiList = document.getElementById("emoji-list");
 const clearChatBtn = document.getElementById("clear-chat-btn");
-const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png"
+const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png";
+
 // Reference to the "messages" and "usernames" in the database
 const messagesRef = ref(db, "messages");
 const usernamesRef = ref(db, "usernames");
-//const pfpRef = ref(db, "pfp");
+
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-//let pfp = localStorage.getItem("pfp") || "";
+
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
   toggleClearChatButton(username);
 }
-//if (pfp) {
-//  pfpInput.value = pfp;
-//}
-
 
 // Event listener for username input field
 usernameInput.addEventListener("input", async () => {
   const newUsername = usernameInput.value.trim();
   const sanitizedUsername = sanitizeText(newUsername);
 
-  // If username is different from the old one, check if it's unique
   if (newUsername && newUsername !== username) {
     const usernameExists = await checkUsernameUnique(sanitizedUsername);
     if (usernameExists) {
@@ -304,12 +301,7 @@ usernameInput.addEventListener("input", async () => {
     localStorage.setItem("username", username);
     update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
   }
-//pfpInput.addEventListener("input", async () => {
-//  const newpfp = pfpInput.value.trim();
-//    localStorage.setItem("pfp", pfp);
-//    update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
-//  })
-//});
+});
 
 function toggleClearChatButton(username) {
   if (username === "EmberAdmin") {
@@ -319,8 +311,6 @@ function toggleClearChatButton(username) {
   }
 }
 
-let isAdmin = false;
-
 // Firebase listener for messages
 onValue(messagesRef, (snapshot) => {
   const data = snapshot.val();
@@ -329,7 +319,6 @@ onValue(messagesRef, (snapshot) => {
     const message = data[id];
     const messageElement = document.createElement("div");
 
-    // Sanitize message text to prevent any HTML or JavaScript injection
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
@@ -340,92 +329,57 @@ onValue(messagesRef, (snapshot) => {
       <button class="delete-button" data-id="${id}">🗑</button>
     `;
     messagesDiv.appendChild(messageElement);
-
-    // Admin privileges: Edit and Delete for all messages
-    if (isAdmin) {
-      // Edit Button Event Listener
-      messageElement.querySelector(".edit-button").addEventListener("click", () => {
-        messageInput.value = message.text;
-        sendForm.removeEventListener("submit", sendMessage); // Disable default submit action
-        sendForm.addEventListener("submit", () => {
-          update(ref(db, "messages/" + id), {
-            text: sanitizeText(messageInput.value.trim()),
-            username: message.username,
-            timestamp: new Date().toLocaleTimeString(),
-          });
-          messageInput.value = "";
-        });
-      });
-
-      // Delete Button Event Listener
-      messageElement.querySelector(".delete-button").addEventListener("click", () => {
-        remove(ref(db, "messages/" + id));
-      });
-    }
   }
   messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
 });
 
-// Sanitize text to prevent XSS (escaping dangerous HTML tags)
+// Sanitize text
 function sanitizeText(text) {
-  // Using DOMPurify to sanitize text input and remove dangerous HTML/JS
   return DOMPurify.sanitize(text);
 }
 
-// Check if the username is unique (case-insensitive)
+// Check username uniqueness
 async function checkUsernameUnique(username) {
   const snapshot = await get(ref(db, `usernames/${username.toLowerCase()}`));
-  return snapshot.exists(); // Returns true if the username already exists
+  return snapshot.exists();
 }
-isAdmin = username === "EmberAdmin";
-// Send a new message
+
+// Send message
 sendForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const messageText = sanitizeText(messageInput.value.trim());
-  if (messageText === "") return;
+  if (!messageText) return;
 
-  // Check if the user is an admin
-  isAdmin = username === "EmberAdmin";
-
-  // Show or hide clear chat button
-  toggleClearChatButton(username);
-
-  // Push the message to Firebase
   push(messagesRef, {
     text: messageText,
-    username: username,
+    username,
     timestamp: new Date().toLocaleTimeString(),
-    pfp: pfp, // Add the profile picture URL here
+    pfp
   });
 
   messageInput.value = ""; // Clear input field
 });
 
-// Clear Chat Button
+// Clear chat button
 clearChatBtn.addEventListener("click", () => {
-  messagesDiv.innerHTML = ""; // Clear the displayed messages
-  // Clear messages from Firebase
+  messagesDiv.innerHTML = "";
   clearDatabase();
 });
 
-// Emoji Button click
+// Emoji modal
 emojiButton.addEventListener("click", () => {
   emojiModal.style.display = "block";
 });
-
-// Close Emoji Modal
 closeEmojiModal.addEventListener("click", () => {
   emojiModal.style.display = "none";
 });
-
-// Insert selected emoji into the message input field
 emojiList.addEventListener("click", (event) => {
   if (event.target && event.target.classList.contains("emoji")) {
     const emoji = event.target.getAttribute("data-emoji");
-    messageInput.value += emoji; // Insert emoji at the end of the message input
+    messageInput.value += emoji;
   }
 });
- </script>
+</script>
 </body>
 </html>
 
