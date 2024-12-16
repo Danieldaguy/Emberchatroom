@@ -282,7 +282,7 @@ if (username) {
   toggleClearChatButton(username);
 }
 if (pfp) {
-  pfpInput.value = pfp;
+  pfpInput.value = atob(pfp);
 }
 // Event listener for username input field
 usernameInput.addEventListener("input", async () => {
