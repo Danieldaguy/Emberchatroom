@@ -337,7 +337,7 @@ onValue(messagesRef, (snapshot) => {
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     messageElement.innerHTML = `
-      <span class="pfp"><img height=30px width=30px src="${(pfp)}"></span>
+      <span class="pfp-span"><img height=30px width=30px src="${(pfpInput)}"></span>
       <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
