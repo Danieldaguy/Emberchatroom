@@ -313,7 +313,7 @@ usernameInput.addEventListener("input", async () => {
 pfpInput.addEventListener("input", async () => {
   const newPfp = pfpInput.value.trim();
   const sanitizedPfp = sanitizeText(newPfp);
-
+  let base64encodedpfp = btoa(pfp);
 
     // Remove old username from Firebase (if any)
     if (pfp) {
@@ -324,7 +324,6 @@ pfpInput.addEventListener("input", async () => {
     pfp = sanitizedPfp;
     sanitizedPfp = btoa(sanitizedPfp);
     localStorage.setItem("pfp", pfp);
-    let base64encodedpfp = btoa(pfp);
     console.log(base64encodedpfp)
     console.log(sanitizedPfp)
     update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
