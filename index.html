@@ -342,6 +342,7 @@ onValue(messagesRef, (snapshot) => {
     const messageElement = document.createElement("div");
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    console.log(message.pfp)
     messageElement.innerHTML = `
       <span class="pfp-span"><img height=30px width=30px src="${(atob(message.pfp))}"></span>
       <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
