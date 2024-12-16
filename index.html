@@ -267,18 +267,18 @@ const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png"
 // Reference to the "messages" and "usernames" in the database
 const messagesRef = ref(db, "messages");
 const usernamesRef = ref(db, "usernames");
-const pfpRef = ref(db, "pfp");
+//const pfpRef = ref(db, "pfp");
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-let pfp = localStorage.getItem("pfp") || "";
+//let pfp = localStorage.getItem("pfp") || "";
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
   toggleClearChatButton(username);
 }
-if (pfp) {
-  pfpInput.value = pfp;
-}
+//if (pfp) {
+//  pfpInput.value = pfp;
+//}
 
 
 // Event listener for username input field
@@ -304,12 +304,12 @@ usernameInput.addEventListener("input", async () => {
     localStorage.setItem("username", username);
     update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
   }
-pfpInput.addEventListener("input", async () => {
-  const newpfp = pfpInput.value.trim();
-    localStorage.setItem("pfp", pfp);
-    update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
-  })
-});
+//pfpInput.addEventListener("input", async () => {
+//  const newpfp = pfpInput.value.trim();
+//    localStorage.setItem("pfp", pfp);
+//    update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
+//  })
+//});
 
 function toggleClearChatButton(username) {
   if (username === "EmberAdmin") {
