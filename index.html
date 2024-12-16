@@ -323,7 +323,6 @@ pfpInput.addEventListener("input", async () => {
     pfp = sanitizedPfp;
     localStorage.setItem("pfp", pfp);
     update(ref(db, `pfps/"${pfp.toLowerCase()}"`), { pfp: sanitizedPfp });
-  }
 });
 
 
