@@ -167,7 +167,7 @@
 <h5>By 🔥•Ember Studios•🔥</h5>
   <div id="chat-container">
    <div id="pfp-container">
-      pfp
+      Picture:
       <input type="text" id="pfp-input" placeholder="Enter your pfp link" required />
     </div>
     <div id="username-container">
@@ -236,7 +236,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-let pfp = "https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter"
+let pfp = ""
+if (pfp == "") {
+  let pfp = "https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter"
+}
 // Function to clear database
 async function clearDatabase() {
   try {
