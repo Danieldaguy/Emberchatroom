@@ -334,7 +334,7 @@ function toggleClearChatButton(username) {
     clearChatBtn.style.display = "none";
   }
 }
-
+console.log(pfp)
 // Firebase listener for messages
 onValue(messagesRef, (snapshot) => {
   const data = snapshot.val();
