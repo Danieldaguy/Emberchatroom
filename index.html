@@ -325,6 +325,8 @@ pfpInput.addEventListener("input", async () => {
     sanitizedPfp = btoa(sanitizedPfp);
     localStorage.setItem("pfp", pfp);
     let base64encodedpfp = btoa(pfp);
+    console.log(base64encodedpfp)
+    console.log(sanitizedPfp)
     update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
 });
 
