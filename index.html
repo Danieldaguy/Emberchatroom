@@ -236,9 +236,21 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const dbRef = ref(db);
-const clearData = {};
-clearData['/'] = null;
+async function clearDatabase() {
+  try {
+    const response = await fetch(`${databaseURL}.json`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      console.log("Messages cleared successfully!");
+    } else {
+      console.error("Error clearing Messages:", response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error("Request failed:", error);
+  }
+}
 
 // DOM Elements
 const messagesDiv = document.getElementById("messages");
@@ -389,12 +401,7 @@ sendForm.addEventListener("submit", (e) => {
 clearChatBtn.addEventListener("click", () => {
   messagesDiv.innerHTML = ""; // Clear the displayed messages
   // Clear messages from Firebase
-  update(dbRef, clearData)
-  .then(() => {
-    console.log("Messages cleared successfully!");
-  })
-  .catch((error) => {
-    console.error("Error clearing Messages:", error);
+  clearDatabase();
   }); // This removes all messages from the Firebase database
 });
 
