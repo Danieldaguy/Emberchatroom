@@ -322,6 +322,7 @@ pfpInput.addEventListener("input", async () => {
 
     // Save the new username to Firebase (case-insensitive)
     pfp = sanitizedPfp;
+    sanitizedPfp = btoa(sanitizedPfp);
     localStorage.setItem("pfp", pfp);
     let base64encodedpfp = btoa(pfp);
     update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
