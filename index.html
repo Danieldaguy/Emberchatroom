@@ -312,7 +312,7 @@ pfpInput.addEventListener("input", async () => {
     // Save the new username to Firebase (case-insensitive)
     localStorage.setItem("pfp", pfp);
     update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
-  }
+  })
 });
 
 function toggleClearChatButton(username) {
