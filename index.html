@@ -238,7 +238,7 @@ const db = getDatabase(app);
 async function clearDatabase() {
   try {
     const apiKey = "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU"; 
-    const databaseURL = "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com"
+    const databaseURL = "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com/"
     const response = await fetch(`${databaseURL}.json?auth=${apiKey}`, {
       method: "DELETE",
     });
