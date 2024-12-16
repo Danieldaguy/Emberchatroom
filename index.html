@@ -310,18 +310,16 @@ usernameInput.addEventListener("input", async () => {
 
 pfpInput.addEventListener("input", async () => {
   const newPfp = pfpInput.value.trim();
-  let sanitizedPfp = sanitizeText(newPfp);
-  let base64encodedpfp = btoa(sanitizedPfp);
+  let base64encodedpfp = btoa(newPfp);
     // Remove old username from Firebase (if any)
     if (pfp) {
       await remove(ref(db, `pfps/${base64encodedpfp.toLowerCase()}`));
     }
 
     // Save the new username to Firebase (case-insensitive)
-    sanitizedPfp = base64encodedpfp;
     pfp = base64encodedpfp;
     localStorage.setItem("pfp", base64encodedpfp);
-    update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
+    update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: base64encodedpfp });
 });
 
 
