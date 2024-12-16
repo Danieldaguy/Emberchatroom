@@ -305,8 +305,7 @@ usernameInput.addEventListener("input", async () => {
     update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
   }
 pfpInput.addEventListener("input", async () => {
-  const newUsername = usernameInput.value.trim();
-  const sanitizedUsername = sanitizeText(newUsername);
+  const newpfp = pfpInput.value.trim();
     localStorage.setItem("pfp", pfp);
     update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
   })
