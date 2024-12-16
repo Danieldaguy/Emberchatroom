@@ -276,7 +276,6 @@ const usernamesRef = ref(db, "usernames");
 
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-let pfp = localStorage.getItem("pfp") || "");
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
