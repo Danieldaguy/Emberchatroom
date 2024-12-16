@@ -278,7 +278,9 @@ if (username) {
   usernameInput.value = username;
   toggleClearChatButton(username);
 }
-
+if (pfp) {
+  pfpInput.value = pfp;
+}
 // Event listener for username input field
 usernameInput.addEventListener("input", async () => {
   const newUsername = usernameInput.value.trim();
@@ -303,6 +305,16 @@ usernameInput.addEventListener("input", async () => {
   }
 });
 
+pfpInput.addEventListener("input", async () => {
+  const newPfp = pfpInput.value.trim();
+
+
+    // Save the new username to Firebase (case-insensitive)
+    localStorage.setItem("pfp", pfp);
+    update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
+  }
+});
+
 function toggleClearChatButton(username) {
   if (username === "EmberAdmin") {
     clearChatBtn.style.display = "block";
@@ -318,12 +330,11 @@ onValue(messagesRef, (snapshot) => {
   for (const id in data) {
     const message = data[id];
     const messageElement = document.createElement("div");
-    const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png";
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     messageElement.innerHTML = `
-      <span class="username"><img height=30px width=30px src="https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter">${sanitizeText(message.username)}</span>: ${messageText}
+      <span class="username"><img height=30px width=30px src="${(message.pfp)}">${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
       <button class="delete-button" data-id="${id}">🗑</button>
