@@ -289,7 +289,7 @@ pfpInput.addEventListener("input", async () => {
   const sanitizedUsername = sanitizeText(newUsername);
     localStorage.setItem("pfp", pfp);
     update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
-  }
+  })
 });
 
 function toggleClearChatButton(username) {
