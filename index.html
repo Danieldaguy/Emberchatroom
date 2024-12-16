@@ -237,8 +237,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 let pfp = ""
-if (pfp == "") {
-  let pfp = "https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter"
+if (pfp === "") {
+  pfp = "https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter";
 }
 // Function to clear database
 async function clearDatabase() {
