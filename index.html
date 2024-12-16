@@ -276,8 +276,7 @@ const usernamesRef = ref(db, "usernames");
 
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-let decodedPfp = atob(localStorage.getItem("pfp") || "");
-pfp = decodedPfp;
+let pfp = localStorage.getItem("pfp") || "");
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
@@ -345,7 +344,7 @@ onValue(messagesRef, (snapshot) => {
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
     messageElement.innerHTML = `
-      <span class="pfp-span"><img height=30px width=30px src="${(message.pfp)}"></span>
+      <span class="pfp-span"><img height=30px width=30px src="${(atob(message.pfp))}"></span>
       <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
