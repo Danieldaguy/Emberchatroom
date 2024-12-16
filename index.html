@@ -377,7 +377,7 @@ async function checkUsernameUnique(username) {
   const snapshot = await get(ref(db, `usernames/${username.toLowerCase()}`));
   return snapshot.exists(); // Returns true if the username already exists
 }
-
+isAdmin = username === "EmberAdmin";
 // Send a new message
 sendForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -425,7 +425,7 @@ emojiList.addEventListener("click", (event) => {
     messageInput.value += emoji; // Insert emoji at the end of the message input
   }
 });
-</script>
+ </script>
 </body>
 </html>
 
