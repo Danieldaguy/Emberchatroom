@@ -166,6 +166,10 @@
   <h1>🔥•LitChat V1•🔥</h1>
 <h5>By 🔥•Ember Studios•🔥</h5>
   <div id="chat-container">
+   <div id="pfp-container">
+      pfp
+      <input type="text" id="pfp-input" placeholder="Enter your pfp link" required />
+    </div>
     <div id="username-container">
       Username:
       <input type="text" id="username-input" placeholder="Enter your username" required />
@@ -247,10 +251,10 @@ const clearChatBtn = document.getElementById("clear-chat-btn");
 // Reference to the "messages" and "usernames" in the database
 const messagesRef = ref(db, "messages");
 const usernamesRef = ref(db, "usernames");
-
+const pfpRef = ref(db, "pfp");
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-
+let pfp = localStorage.getItem("pfp") || "";
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
@@ -280,8 +284,12 @@ usernameInput.addEventListener("input", async () => {
     localStorage.setItem("username", username);
     update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
   }
-
-  toggleClearChatButton(username);
+pfpInput.addEventListener("input", async () => {
+  const newUsername = usernameInput.value.trim();
+  const sanitizedUsername = sanitizeText(newUsername);
+    localStorage.setItem("pfp", pfp);
+    update(ref(db, `pfps/${pfp.toLowerCase()}`), { pfp: pfp });
+  }
 });
 
 function toggleClearChatButton(username) {
@@ -307,7 +315,7 @@ onValue(messagesRef, (snapshot) => {
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     messageElement.innerHTML = `
-      <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
+      <span class="username"><img height=10px width=10px src=pfp>${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
       <button class="delete-button" data-id="${id}">🗑</button>
@@ -355,7 +363,6 @@ async function checkUsernameUnique(username) {
 sendForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const messageText = sanitizeText(messageInput.value.trim());
-  const pfp = "https://www.example.com/default-pfp.gif"; // Default profile picture (can be uploaded by users)
   if (messageText === "") return;
 
   // Check if the user is an admin
