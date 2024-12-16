@@ -276,7 +276,8 @@ const usernamesRef = ref(db, "usernames");
 
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-
+let decodedpfp = atob(localStorage.getItem("pfp")); || "";
+let pfp = decodedpfp;
 // Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
@@ -322,7 +323,8 @@ pfpInput.addEventListener("input", async () => {
     // Save the new username to Firebase (case-insensitive)
     pfp = sanitizedPfp;
     localStorage.setItem("pfp", pfp);
-    update(ref(db, `pfps/"${pfp.toLowerCase()}"`), { pfp: sanitizedPfp });
+    let base64encodedpfp = btoa(pfp);
+    update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
 });
 
 
