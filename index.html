@@ -264,7 +264,7 @@ const emojiModal = document.getElementById("emoji-modal");
 const closeEmojiModal = document.getElementById("close-emoji-modal");
 const emojiList = document.getElementById("emoji-list");
 const clearChatBtn = document.getElementById("clear-chat-btn");
-const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png";
+
 
 // Reference to the "messages" and "usernames" in the database
 const messagesRef = ref(db, "messages");
@@ -318,7 +318,7 @@ onValue(messagesRef, (snapshot) => {
   for (const id in data) {
     const message = data[id];
     const messageElement = document.createElement("div");
-
+    const pfp = "https://images.rbxcdn.com/7c5fe83dffa97250aaddd54178900ea7.png";
     const sanitizedText = sanitizeText(message.text);
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
