@@ -236,6 +236,9 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const dbRef = ref(db);
+const clearData = {};
+clearData['/'] = null;
 
 // DOM Elements
 const messagesDiv = document.getElementById("messages");
@@ -386,7 +389,13 @@ sendForm.addEventListener("submit", (e) => {
 clearChatBtn.addEventListener("click", () => {
   messagesDiv.innerHTML = ""; // Clear the displayed messages
   // Clear messages from Firebase
-  update(ref(db, "messages"), null); // This removes all messages from the Firebase database
+  update(dbRef, clearData)
+  .then(() => {
+    console.log("Messages cleared successfully!");
+  })
+  .catch((error) => {
+    console.error("Error clearing Messages:", error);
+  }); // This removes all messages from the Firebase database
 });
 
 // Emoji Button click
