@@ -236,7 +236,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-let pfp = ""
+let pfp = localStorage.getItem("pfp") || "";
 if (pfp === "") {
   localStorage.setItem("pfp", "aHR0cHM6Ly90ci5yYnhjZG4uY29tLzE4MERBWS1hMzFjMThkMmI5YTFiM2MzODM3OTljMzIwNmJlY2VlYy80MjAvNDIwL0ltYWdlL1BuZy9ub0ZpbHRlcg==")
 }
@@ -314,17 +314,17 @@ pfpInput.addEventListener("input", async () => {
   const newPfp = pfpInput.value.trim();
   let sanitizedPfp = sanitizeText(newPfp);
   let base64encodedpfp = btoa(pfp);
+  console.log(sanitizedPfp)
   sanitizedPfp = btoa(sanitizedPfp);
+  console.log(sanitizedPfp)
     // Remove old username from Firebase (if any)
     if (pfp) {
       await remove(ref(db, `pfps/${base64encodedpfp.toLowerCase()}`));
     }
 
     // Save the new username to Firebase (case-insensitive)
-    pfp = sanitizedPfp;
+    base64encodedpfp = sanitizedPfp;
     localStorage.setItem("pfp", pfp);
-    console.log(base64encodedpfp)
-    console.log(sanitizedPfp)
     update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: sanitizedPfp });
 });
 
