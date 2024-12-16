@@ -236,7 +236,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-let pfp = ""
+let pfp = "https://tr.rbxcdn.com/180DAY-a31c18d2b9a1b3c383799c3206beceec/420/420/Image/Png/noFilter"
 // Function to clear database
 async function clearDatabase() {
   try {
@@ -334,7 +334,8 @@ onValue(messagesRef, (snapshot) => {
     const messageText = sanitizedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
 
     messageElement.innerHTML = `
-      <span class="username"><img height=30px width=30px src="${(message.pfp)}">${sanitizeText(message.username)}</span>: ${messageText}
+      <span class="pfp"><img height=30px width=30px src="${(message.pfp)}"></span>
+      <span class="username">${sanitizeText(message.username)}</span>: ${messageText}
       <span class="timestamp">${message.timestamp}</span>
       <button class="edit-button" data-id="${id}">✍</button>
       <button class="delete-button" data-id="${id}">🗑</button>
