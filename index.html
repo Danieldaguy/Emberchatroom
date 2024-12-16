@@ -317,7 +317,7 @@ pfpInput.addEventListener("input", async () => {
 
     // Remove old username from Firebase (if any)
     if (pfp) {
-      await remove(ref(db, `pfp/${pfp.toLowerCase()}`));
+      await remove(ref(db, `pfps/${base64encodedpfp.toLowerCase()}`));
     }
 
     // Save the new username to Firebase (case-insensitive)
