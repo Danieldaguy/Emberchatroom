@@ -311,12 +311,21 @@ usernameInput.addEventListener("input", async () => {
 
 pfpInput.addEventListener("input", async () => {
   const newPfp = pfpInput.value.trim();
+  const sanitizedPfp = sanitizeText(newPfp);
 
+
+    // Remove old username from Firebase (if any)
+    if (pfp) {
+      await remove(ref(db, `pfp/${pfp.toLowerCase()}`));
+    }
 
     // Save the new username to Firebase (case-insensitive)
+    pfp = sanitizedPfp;
     localStorage.setItem("pfp", pfp);
-    update(ref(db, `pfps/"${pfp.toLowerCase()}"`), { pfp: pfp });
+    update(ref(db, `pfps/"${pfp.toLowerCase()}"`), { pfp: sanitizedPfp });
+  }
 });
+
 
 function toggleClearChatButton(username) {
   if (username === "EmberAdmin") {
