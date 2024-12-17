@@ -175,6 +175,64 @@
 <body>
  <h1>Ember Studios Chat Login Page</h1>
  <div id="loginbox">
-  <p>Need an account? go here</p><a href="Register.html">Reigster</a>
+  <p>Need an account? go here</p><a href="Register.html">Register</a>
+  <div id="username-container">
+      Username:
+      <input type="text" id="username-input" placeholder="Enter your username" required />
+    </div>
+  <div id="password-container">
+      Password:
+      <input type="text" id="password-input" placeholder="Enter your password" required />
+    </div>
  </div>
 </body>
+<script type="module">
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
+  authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
+  databaseURL: "https://ember-studios-chatroom-73885-default-rtdb.firebaseio.com",
+  projectId: "ember-studios-chatroom-73885",
+  storageBucket: "ember-studios-chatroom-73885.appspot.com",
+  messagingSenderId: "563168350862",
+  appId: "1:563168350862:web:c801f8696f7ab9f5e8efdf",
+  measurementId: "G-LQDGZVJ2JM"
+};
+const passwordInput = document.getElementById("password-input");
+const usernameInput = document.getElementById("username-input");
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+ usernameInput.addEventListener("input", async () => {
+  const newUsername = usernameInput.value.trim();
+  const sanitizedUsername = sanitizeText(newUsername);
+
+  if (newUsername && newUsername !== username) {
+    const usernameExists = await checkUsernameUnique(sanitizedUsername);
+    if (usernameExists) {
+      alert("Username is already taken, please choose another.");
+      return;
+    }
+
+    // Remove old username from Firebase (if any)
+    if (username) {
+      await remove(ref(db, `usernames/${username.toLowerCase()}`));
+    }
+
+    // Save the new username to Firebase (case-insensitive)
+    username = sanitizedUsername;
+    localStorage.setItem("username", username);
+    update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
+  }
+});
+  passwordInput.addEventListener("input", async () => {
+  const newUsername = usernameInput.value.trim();
+    password = newPassword;
+    localStorage.setItem("password", password);
+    update(ref(db, `passwords/${password.toLowerCase()}`), { username: password });
+  }
+});
+</script>
