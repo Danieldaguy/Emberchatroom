@@ -56,7 +56,6 @@ const usernamesRef = ref(db, "usernames");
 
 // Get stored username from localStorage
 let username = localStorage.getItem("username") || "";
-// Check if username exists in Firebase and apply it
 if (username) {
   usernameInput.value = username;
   toggleClearChatButton(username);
@@ -77,27 +76,24 @@ usernameInput.addEventListener("input", async () => {
       return;
     }
 
-    // Remove old username from Firebase (if any)
     if (username) {
       await remove(ref(db, `usernames/${username.toLowerCase()}`));
     }
 
-    // Save the new username to Firebase (case-insensitive)
     username = sanitizedUsername;
     localStorage.setItem("username", username);
     update(ref(db, `usernames/${username.toLowerCase()}`), { username: sanitizedUsername });
+    toggleClearChatButton(username);
   }
 });
 
 pfpInput.addEventListener("input", async () => {
   const newPfp = pfpInput.value.trim();
   let base64encodedpfp = btoa(newPfp);
-  // Remove old username from Firebase (if any)
   if (pfp) {
     await remove(ref(db, `pfps/${base64encodedpfp.toLowerCase()}`));
   }
 
-  // Save the new username to Firebase (case-insensitive)
   pfp = base64encodedpfp;
   localStorage.setItem("pfp", base64encodedpfp);
   update(ref(db, `pfps/"${base64encodedpfp.toLowerCase()}"`), { pfp: base64encodedpfp });
@@ -111,10 +107,9 @@ function toggleClearChatButton(username) {
   }
 }
 
-// Firebase listener for messages
 onValue(messagesRef, (snapshot) => {
   const data = snapshot.val();
-  messagesDiv.innerHTML = ""; // Clear messagesDiv
+  messagesDiv.innerHTML = "";
   for (const id in data) {
     const message = data[id];
     const messageElement = document.createElement("div");
@@ -129,22 +124,38 @@ onValue(messagesRef, (snapshot) => {
       <button class="delete-button" data-id="${id}">🗑</button>
     `;
     messagesDiv.appendChild(messageElement);
+
+    const editButton = messageElement.querySelector(".edit-button");
+    const deleteButton = messageElement.querySelector(".delete-button");
+
+    editButton.addEventListener("click", () => {
+      const newText = prompt("Edit your message:", message.text);
+      if (newText !== null && newText.trim() !== "") {
+        update(ref(db, `messages/${id}`), {
+          text: sanitizeText(newText.trim()),
+          edited: true
+        });
+      }
+    });
+
+    deleteButton.addEventListener("click", () => {
+      if (confirm("Are you sure you want to delete this message?")) {
+        remove(ref(db, `messages/${id}`));
+      }
+    });
   }
-  messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// Sanitize text
 function sanitizeText(text) {
   return DOMPurify.sanitize(text);
 }
 
-// Check username uniqueness
 async function checkUsernameUnique(username) {
   const snapshot = await get(ref(db, `usernames/${username.toLowerCase()}`));
   return snapshot.exists();
 }
 
-// Send message
 sendForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const messageText = sanitizeText(messageInput.value.trim());
@@ -153,4 +164,56 @@ sendForm.addEventListener("submit", (e) => {
   push(messagesRef, {
     text: messageText,
     username,
-    timestamp: new Date</antArtifact>
+    timestamp: new Date().toLocaleTimeString(),
+    pfp
+  });
+
+  messageInput.value = "";
+});
+
+clearChatBtn.addEventListener("click", () => {
+  if (confirm("Are you sure you want to clear all messages? This cannot be undone.")) {
+    messagesDiv.innerHTML = "";
+    clearDatabase();
+  }
+});
+
+emojiButton.addEventListener("click", () => {
+  emojiModal.style.display = "block";
+});
+
+closeEmojiModal.addEventListener("click", () => {
+  emojiModal.style.display = "none";
+});
+
+emojiList.addEventListener("click", (event) => {
+  if (event.target.classList.contains("emoji")) {
+    const emoji = event.target.getAttribute("data-emoji");
+    messageInput.value += emoji;
+    messageInput.focus();
+  }
+});
+
+window.addEventListener("click", (event) => {
+  if (event.target === emojiModal) {
+    emojiModal.style.display = "none";
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && emojiModal.style.display === "block") {
+    emojiModal.style.display = "none";
+  }
+  
+  if (e.key === "Enter" && !e.shiftKey && document.activeElement === messageInput) {
+    e.preventDefault();
+    sendForm.dispatchEvent(new Event("submit"));
+  }
+});
+
+if (!username) {
+  const defaultUsername = "Guest" + Math.floor(Math.random() * 1000);
+  username = defaultUsername;
+  localStorage.setItem("username", username);
+  usernameInput.value = username;
+}
