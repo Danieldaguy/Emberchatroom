@@ -420,4 +420,4 @@ elements.sendForm.addEventListener("submit", async (e) => {
       clientTimestamp: new Date().toISOString()
     });
 
-    userMessageCounts.set(username, user</antArtifact>
+    userMessageCounts.set(username, user)
