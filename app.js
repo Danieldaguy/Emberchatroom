@@ -421,4 +421,5 @@ elements.sendForm.addEventListener("submit", async (e) => {
     });
 
     userMessageCounts.set(username, user)
-  };
+  }
+};
