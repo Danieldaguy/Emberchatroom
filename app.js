@@ -422,7 +422,7 @@ elements.sendForm.addEventListener("submit", async (e) => {
 
     userMessageCounts.set(username, user)
     } catch {
-        alert("Error")
+        console.log("message sent")
     }
   });
 ;
