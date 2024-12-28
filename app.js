@@ -410,10 +410,10 @@ elements.sendForm.addEventListener("submit", async (e) => {
     alert("You have reached the maximum number of messages allowed.");
     return;
   }
-
+  let text = sanitizedText
   try {
     await push(messagesRef, {e
-      text: sanitizedText,
+      text,
       username,
       timestamp: Date.now(),
       pfp,
