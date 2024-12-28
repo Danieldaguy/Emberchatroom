@@ -424,5 +424,5 @@ elements.sendForm.addEventListener("submit", async (e) => {
     } catch {
         alert("Error")
     }
-  }
+  });
 };
