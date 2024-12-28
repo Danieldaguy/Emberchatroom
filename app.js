@@ -425,4 +425,4 @@ elements.sendForm.addEventListener("submit", async (e) => {
         alert("Error")
     }
   });
-};
+;
