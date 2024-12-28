@@ -412,8 +412,8 @@ elements.sendForm.addEventListener("submit", async (e) => {
   }
   let text = sanitizedText;
   try {
-    await push(messagesRef, {e
-      text,
+    await push(messagesRef, {
+      text: sanitizedText,
       username,
       timestamp: Date.now(),
       pfp,
