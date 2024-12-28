@@ -412,7 +412,7 @@ elements.sendForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    await push(messagesRef, {
+    await push(messagesRef, {e
       text: sanitizedText,
       username,
       timestamp: Date.now(),
@@ -421,5 +421,8 @@ elements.sendForm.addEventListener("submit", async (e) => {
     });
 
     userMessageCounts.set(username, user)
+    } catch {
+        alert("Error")
+    }
   }
 };
