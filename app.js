@@ -394,22 +394,90 @@ elements.sendForm.addEventListener("submit", async (e) => {
 
   const messageText = elements.messageInput.value.trim();
   const sanitizedText = validateInput(messageText);
-  
+
   if (!sanitizedText) {
-    alert("Invalid message content. Please check your message and try again.");
+    alert("Invalid message content. Please ensure it doesn't contain restricted content.");
+    elements.messageInput.value = "";
     return;
   }
 
   if (isRateLimited(username)) {
-    alert("Please wait a few seconds before sending another message.");
+    alert("You are sending messages too quickly. Please wait a moment.");
     return;
   }
 
-  const userCount = userMessageCounts.get(username) || 0;
-  if (userCount >= securityConfig.maxMessagesPerUser) {
-    alert("You have reached the maximum number of messages allowed.");
-    return;
+  try {
+    const newMessage = {
+      text: sanitizedText,
+      username,
+      timestamp: Date.now(),
+      pfp
+    };
+
+    const userMessages = userMessageCounts.get(username) || 0;
+
+    if (userMessages >= securityConfig.maxMessagesPerUser) {
+      alert("You have reached the maximum allowed messages. Please wait before sending more.");
+      return;
+    }
+
+    userMessageCounts.set(username, userMessages + 1);
+
+    await push(messagesRef, newMessage);
+    elements.messageInput.value = "";
+  } catch (error) {
+    console.error('Message send error:', error);
+    alert("Failed to send message. Please try again.");
   }
+});
+
+// Clear chat functionality for admins
+elements.clearChatBtn.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to clear the chat? This action cannot be undone.")) return;
+
+  try {
+    await remove(messagesRef);
+    alert("Chat cleared successfully.");
+  } catch (error) {
+    console.error('Chat clear error:', error);
+    alert("Failed to clear chat. Please try again.");
+  }
+});
+
+// Helper function to check username uniqueness
+async function checkUsernameUnique(username) {
+  const snapshot = await get(ref(db, `usernames/${username.toLowerCase()}`));
+  return snapshot.exists();
+}
+
+// Function to toggle the visibility of the clear chat button based on user privileges
+function toggleClearChatButton(user) {
+  // Simulate admin check (you can replace this with an actual admin check)
+  const isAdmin = user === "admin";
+  elements.clearChatBtn.style.display = isAdmin ? "block" : "none";
+}
+
+// Initial call to set up clear chat button visibility
+toggleClearChatButton(username);
+
+// Initialize app with secure default state
+(async function initApp() {
+  try {
+    if (!(await validateRequest())) return;
+
+    if (username) {
+      const usernameExists = await checkUsernameUnique(username);
+      if (!usernameExists) {
+        localStorage.removeItem("username");
+        username = "";
+      }
+    }
+
+    elements.usernameInput.value = username || "";
+  } catch (error) {
+    console.error('App initialization error:', error);
+  }
+})();
   let text = sanitizedText;
   try {
     await push(messagesRef, {
