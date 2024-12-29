@@ -1,3 +1,6 @@
+
+
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -49,16 +52,16 @@ function sanitizeHTML(str) {
 function isRateLimited(userId) {
   const now = Date.now();
   const userTimestamps = messageTimestamps.get(userId) || [];
-  
+
   // Clean up old timestamps
   const recentTimestamps = userTimestamps.filter(ts => now - ts < securityConfig.messageRateLimit);
   messageTimestamps.set(userId, recentTimestamps);
-  
+
   // Check rate limit
   if (recentTimestamps.length >= 3) { // Max 3 messages per rate limit window
     return true;
   }
-  
+
   // Add new timestamp
   recentTimestamps.push(now);
   messageTimestamps.set(userId, recentTimestamps);
@@ -70,7 +73,7 @@ async function validateRequest() {
     throw new Error('Too many concurrent requests');
   }
   requestCount.current++;
-  
+
   try {
     // Add request validation logic here
     return true;
@@ -86,7 +89,7 @@ function validateInput(input, type = 'message') {
 
   // Initial sanitization
   const sanitized = sanitizeHTML(input);
-  
+
   // Length checks
   const maxLength = type === 'message' ? securityConfig.maxMessageLength : securityConfig.maxUsernameLength;
   if (sanitized.length === 0 || sanitized.length > maxLength) {
@@ -203,7 +206,7 @@ elements.usernameInput.addEventListener("input", async () => {
 
   const newUsername = elements.usernameInput.value.trim();
   const sanitizedUsername = validateInput(newUsername, 'username');
-  
+
   if (!sanitizedUsername) {
     alert("Invalid username. Please use 3-20 characters (letters, numbers, underscore, hyphen).");
     elements.usernameInput.value = username;
@@ -232,12 +235,12 @@ elements.usernameInput.addEventListener("input", async () => {
 
       username = sanitizedUsername;
       localStorage.setItem("username", username);
-      
+
       await update(ref(db, `usernames/${username.toLowerCase()}`), {
         username: sanitizedUsername,
         lastUpdated: Date.now()
       });
-      
+
       toggleClearChatButton(username);
     } catch (error) {
       console.error('Username update error:', error);
@@ -251,23 +254,23 @@ elements.pfpInput.addEventListener("input", async () => {
   if (!(await validateRequest())) return;
 
   const newPfp = elements.pfpInput.value.trim();
-  
+
   try {
     if (!(await validateImage(newPfp))) {
       alert("Invalid image URL or file too large. Please use a valid HTTPS image under 2MB.");
       elements.pfpInput.value = atob(pfp);
       return;
     }
-    
+
     const base64encodedpfp = btoa(newPfp);
-    
+
     if (pfp) {
       await remove(ref(db, `pfps/${pfp.toLowerCase()}`));
     }
 
     pfp = base64encodedpfp;
     localStorage.setItem("pfp", base64encodedpfp);
-    
+
     await update(ref(db, `pfps/${base64encodedpfp.toLowerCase()}`), {
       pfp: base64encodedpfp,
       lastUpdated: Date.now()
@@ -283,12 +286,12 @@ onValue(messagesRef, (snapshot) => {
   try {
     const data = snapshot.val();
     elements.messagesDiv.innerHTML = "";
-    
+
     if (!data) return;
 
     for (const id in data) {
       const message = data[id];
-      
+
       // Validate message data
       if (!message || !message.text || !message.username || !message.timestamp || !message.pfp) {
         console.warn('Invalid message data detected:', id);
@@ -373,7 +376,7 @@ onValue(messagesRef, (snapshot) => {
 
       elements.messagesDiv.appendChild(messageElement);
     }
-    
+
     elements.messagesDiv.scrollTop = elements.messagesDiv.scrollHeight;
   } catch (error) {
     console.error('Message processing error:', error);
@@ -384,7 +387,7 @@ onValue(messagesRef, (snapshot) => {
 // Send message with enhanced security
 elements.sendForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  
+
   if (!(await validateRequest())) return;
 
   if (!username) {
@@ -396,35 +399,33 @@ elements.sendForm.addEventListener("submit", async (e) => {
   const sanitizedText = validateInput(messageText);
 
   if (!sanitizedText) {
-  alert("Invalid message content. Please ensure it doesn't contain restricted content.");
-  elements.messageInput.value = "";
-  return;
-}
-
-if (isRateLimited(username)) {
-  alert("You are sending messages too quickly. Please wait a moment.");
-  return;
-}
-
-try {
-  const newMessage = {
-    text: sanitizedText,
-    username,
-    timestamp: Date.now(),
-    pfp
-  };
-
-  const userMessages = userMessageCounts.get(username) || 0;
-
-  if (userMessages >= securityConfig.maxMessagesPerUser) {
-    alert("You have reached the maximum allowed messages. Please wait until a new message limit is allowed.");
+    alert("Invalid message content. Please check your message and try again.");
     return;
   }
 
-  await push(messagesRef, newMessage);
-  userMessageCounts.set(username, userMessages + 1);
-  elements.messageInput.value = "";
-} catch (error) {
-  console.error('Message sending error:', error);
-  alert("Failed to send message. Please try again.");
-}
+  if (isRateLimited(username)) {
+    alert("Please wait a few seconds before sending another message.");
+    return;
+  }
+
+  const userCount = userMessageCounts.get(username) || 0;
+  if (userCount >= securityConfig.maxMessagesPerUser) {
+    alert("You have reached the maximum number of messages allowed.");
+    return;
+  }
+  let text = sanitizedText;
+  try {
+    await push(messagesRef, {
+      text: sanitizedText,
+      username,
+      timestamp: Date.now(),
+      pfp,
+      clientTimestamp: new Date().toISOString()
+    });
+
+    userMessageCounts.set(username, user)
+    } catch {
+        console.log("message sent")
+    }
+  });
+; 
