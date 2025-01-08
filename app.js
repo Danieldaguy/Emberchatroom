@@ -20,7 +20,6 @@ const requestCount = { current: 0 };
 const bannedIPs = new Set();
 const suspiciousActivity = new Map();
 
-// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAw6IN7sKZ3q8kcC0yuLB6cNhxLJ0QHUQU",
   authDomain: "ember-studios-chatroom-73885.firebaseapp.com",
@@ -31,7 +30,6 @@ const firebaseConfig = {
   appId: "1:563168350862:web:f9835b09e8f2f4dde8efdf",
   measurementId: "G-GW9M250DXP"
 };
-
 
 // Initialize Firebase with enhanced security
 const app = initializeApp(firebaseConfig);
