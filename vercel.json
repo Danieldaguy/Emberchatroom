@@ -10,8 +10,8 @@
       "use": "@vercel/static"
     },
     {
-      "src": "*.js",
-      "use": "@vercel/node"
+      "src": "app.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
