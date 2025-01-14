@@ -1,82 +1,105 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://jpphrvektvbpdxuvtgmw.supabase.co"; // Replace with your Supabase URL
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGhydmVrdHZicGR4dXZ0Z213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MDE0ODUsImV4cCI6MjA1MTA3NzQ4NX0.3gyADNnD_r9ERElETL8eg5OQVn9wQ3o3RMAC3JkNn9Q
-"; // Replace with your Supabase anon key
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Initialize Supabase
+const supabaseUrl = "YOUR_SUPABASE_URL";
+const supabaseKey = "YOUR_SUPABASE_KEY";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// DOM Elements
-const usernameInput = document.getElementById("username-input");
-const messageInput = document.getElementById("message-input");
 const messagesDiv = document.getElementById("messages");
 const sendForm = document.getElementById("send-form");
+const messageInput = document.getElementById("message-input");
+const usernameInput = document.getElementById("username-input");
+const pfpInput = document.getElementById("pfp-input");
 const clearChatBtn = document.getElementById("clear-chat-btn");
 
-// Fetch messages from Supabase and display them
+// Fetch messages from Supabase
 async function fetchMessages() {
-  const { data: messages, error } = await supabase
-    .from("messages")
-    .select("*")
-    .order("timestamp", { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .order("timestamp", { ascending: true }); // Sort by timestamp
 
-  if (error) {
-    console.error("Error fetching messages:", error);
-    return;
+    if (error) {
+      console.error("Error fetching messages:", error);
+      return;
+    }
+
+    // Clear current messages
+    messagesDiv.innerHTML = "";
+
+    // Render messages
+    data.forEach(({ username, message, timestamp }) => {
+      const messageElement = document.createElement("div");
+      messageElement.innerHTML = `
+        <strong>${DOMPurify.sanitize(username)}:</strong> 
+        ${DOMPurify.sanitize(message)} 
+        <small>${new Date(timestamp).toLocaleString()}</small>
+      `;
+      messagesDiv.appendChild(messageElement);
+    });
+  } catch (err) {
+    console.error("Unexpected error fetching messages:", err);
   }
-
-  messagesDiv.innerHTML = "";
-  messages.forEach((message) => {
-    const messageElement = document.createElement("div");
-    messageElement.innerHTML = `<strong>${message.username}:</strong> ${message.message}`;
-    messagesDiv.appendChild(messageElement);
-  });
 }
 
 // Send a new message
 sendForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const username = DOMPurify.sanitize(usernameInput.value.trim());
-  const message = DOMPurify.sanitize(messageInput.value.trim());
+  const message = messageInput.value.trim();
+  const username = usernameInput.value.trim();
+  const pfp = pfpInput.value.trim();
 
-  if (!username || !message) {
-    alert("Please enter a username and message.");
+  if (!message || !username || !pfp) {
+    alert("Please fill in all fields!");
     return;
   }
 
-  const { error } = await supabase.from("messages").insert([
-    {
-      username,
-      message,
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  try {
+    const { error } = await supabase.from("messages").insert([
+      {
+        username: username,
+        message: message,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
 
-  if (error) {
-    console.error("Error sending message:", error);
-    return;
+    if (error) {
+      console.error("Error sending message:", error);
+      return;
+    }
+
+    messageInput.value = ""; // Clear input
+    await fetchMessages(); // Refresh chat
+  } catch (err) {
+    console.error("Unexpected error sending message:", err);
   }
-
-  messageInput.value = ""; // Clear the input field
-  await fetchMessages(); // Refresh the chat
 });
 
-// Clear all messages (optional, admin feature)
+// Clear all messages (admin feature)
 clearChatBtn.addEventListener("click", async () => {
-  const { error } = await supabase.from("messages").delete().neq("id", 0);
+  try {
+    const { error } = await supabase.from("messages").delete().neq("id", 0);
 
-  if (error) {
-    console.error("Error clearing messages:", error);
-    return;
+    if (error) {
+      console.error("Error clearing messages:", error);
+      return;
+    }
+
+    await fetchMessages();
+  } catch (err) {
+    console.error("Unexpected error clearing chat:", err);
   }
-
-  await fetchMessages();
 });
 
 // Listen for real-time updates
 supabase
   .channel("public:messages")
-  .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, fetchMessages)
+  .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+    console.log("Realtime update detected, fetching messages...");
+    fetchMessages();
+  })
   .subscribe();
 
 // Fetch initial messages
