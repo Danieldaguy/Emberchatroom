@@ -1,31 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase
-const supabaseUrl = "https://jpphrvektvbpdxuvtgmw.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGhydmVrdHZicGR4dXZ0Z213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MDE0ODUsImV4cCI6MjA1MTA3NzQ4NX0.3gyADNnD_r9ERElETL8eg5OQVn9wQ3o3RMAC3JkNn9Q";
+// Supabase Configuration
+const supabaseUrl = "https://<YOUR_SUPABASE_PROJECT_URL>.supabase.co";
+const supabaseKey = "<YOUR_ANON_API_KEY>";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// HTML Elements
 const messagesDiv = document.getElementById("messages");
 const sendForm = document.getElementById("send-form");
 const messageInput = document.getElementById("message-input");
 const usernameInput = document.getElementById("username-input");
-const pfpInput = document.getElementById("pfp-input");
 const clearChatBtn = document.getElementById("clear-chat-btn");
 
-// Fetch messages from Supabase
+// Fetch Messages from Supabase
 async function fetchMessages() {
   try {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
-      .order("timestamp", { ascending: true }); // Sort by timestamp
+      .order("timestamp", { ascending: true });
 
     if (error) {
       console.error("Error fetching messages:", error);
       return;
     }
 
-    // Clear current messages
+    // Clear the current messages
     messagesDiv.innerHTML = "";
 
     // Render messages
@@ -43,15 +43,14 @@ async function fetchMessages() {
   }
 }
 
-// Send a new message
+// Send a Message
 sendForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const message = messageInput.value.trim();
   const username = usernameInput.value.trim();
-  const pfp = pfpInput.value.trim();
 
-  if (!message || !username || !pfp) {
+  if (!message || !username) {
     alert("Please fill in all fields!");
     return;
   }
@@ -70,14 +69,14 @@ sendForm.addEventListener("submit", async (event) => {
       return;
     }
 
-    messageInput.value = ""; // Clear input
-    await fetchMessages(); // Refresh chat
+    messageInput.value = ""; // Clear the message input
+    await fetchMessages(); // Refresh the messages
   } catch (err) {
     console.error("Unexpected error sending message:", err);
   }
 });
 
-// Clear all messages (admin feature)
+// Clear Chat (Admin Feature)
 clearChatBtn.addEventListener("click", async () => {
   try {
     const { error } = await supabase.from("messages").delete().neq("id", 0);
@@ -93,14 +92,11 @@ clearChatBtn.addEventListener("click", async () => {
   }
 });
 
-// Listen for real-time updates
+// Real-Time Updates
 supabase
   .channel("public:messages")
-  .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-    console.log("Realtime update detected, fetching messages...");
-    fetchMessages();
-  })
+  .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, fetchMessages)
   .subscribe();
 
-// Fetch initial messages
+// Initial Fetch
 fetchMessages();
