@@ -1,11 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '../lib/supabaseClient'; // Import Supabase client
 
-// Supabase Configuration
-const supabaseUrl = "https://jpphrvektvbpdxuvtgmw.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcGhydmVrdHZicGR4dXZ0Z213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MDE0ODUsImV4cCI6MjA1MTA3NzQ4NX0.3gyADNnD_r9ERElETL8eg5OQVn9wQ3o3RMAC3JkNn9Q";
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// HTML Elements
 const messagesDiv = document.getElementById("messages");
 const sendForm = document.getElementById("send-form");
 const messageInput = document.getElementById("message-input");
@@ -25,8 +19,7 @@ async function fetchMessages() {
       return;
     }
 
-    // Clear the current messages
-    messagesDiv.innerHTML = "";
+    messagesDiv.innerHTML = ""; // Clear the current messages
 
     // Render messages
     data.forEach(({ username, message, timestamp }) => {
