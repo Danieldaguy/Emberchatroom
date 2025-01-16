@@ -2,7 +2,7 @@
   "name": "chatroom",
   "version": "1.0.0",
   "description": "A simple chatroom app using Supabase",
-  "main": "index.htmk",
+  "main": "app.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
