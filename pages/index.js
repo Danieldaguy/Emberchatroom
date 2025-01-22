@@ -4,11 +4,26 @@ import { supabase } from '../lib/supabaseClient';
 export default function Chatroom() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    const [username, setUsername] = useState(localStorage.getItem('username') || '');  // Load from localStorage
-    const [profilePicture, setProfilePicture] = useState(localStorage.getItem('profilePicture') || '');  // Load from localStorage
+    const [username, setUsername] = useState('');
+    const [profilePicture, setProfilePicture] = useState('');
     const [admin, setAdmin] = useState(false);  // Flag to check if user is admin
 
-    const adminUsernames = ['Dangy', 'KingDino'];  // List of admin usernames (case-insensitive)
+    const adminUsernames = ['adminusername1', 'adminusername2'];  // List of admin usernames (case-insensitive)
+
+    // Only load username and profile picture from localStorage on client-side
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const storedUsername = localStorage.getItem('username');
+            const storedProfilePicture = localStorage.getItem('profilePicture');
+            setUsername(storedUsername || '');
+            setProfilePicture(storedProfilePicture || '');
+        }
+
+        // Check if the user is an admin based on username (case-insensitive)
+        if (adminUsernames.includes(username.toLowerCase())) {
+            setAdmin(true);
+        }
+    }, [username]);
 
     useEffect(() => {
         fetchMessages();
@@ -19,11 +34,6 @@ export default function Chatroom() {
                 setMessages((prev) => [...prev, payload.new]);
             })
             .subscribe();
-
-        // Check if the user is an admin based on username (case-insensitive)
-        if (adminUsernames.includes(username.toLowerCase())) {
-            setAdmin(true);
-        }
 
         return () => {
             supabase.removeChannel(channel);
@@ -171,7 +181,6 @@ export default function Chatroom() {
                             {admin && (
                                 <div>
                                     <button onClick={() => deleteMessage(msg.id)}>Delete</button>
-                                    {/* Example of banning or muting a user */}
                                     <button onClick={() => banUser(msg.username)}>Ban User</button>
                                     <button onClick={() => muteUser(msg.username)}>Mute User</button>
                                 </div>
