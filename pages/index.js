@@ -18,12 +18,14 @@ export default function Chatroom() {
             setUsername(storedUsername || '');
             setProfilePicture(storedProfilePicture || '');
         }
+    }, []);  // Empty dependency array ensures this effect runs only once after mount
 
-        // Check if the user is an admin based on username (case-insensitive)
+    // Check if the user is an admin based on username (case-insensitive)
+    useEffect(() => {
         if (adminUsernames.includes(username.toLowerCase())) {
             setAdmin(true);
         }
-    }, [username]);
+    }, [username]);  // Run only when username changes
 
     useEffect(() => {
         fetchMessages();
@@ -91,12 +93,16 @@ export default function Chatroom() {
     // Save username and profile picture to localStorage
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
-        localStorage.setItem('username', e.target.value);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('username', e.target.value);
+        }
     };
 
     const handleProfilePictureChange = (e) => {
         setProfilePicture(e.target.value);
-        localStorage.setItem('profilePicture', e.target.value);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('profilePicture', e.target.value);
+        }
     };
 
     const clearChat = async () => {
