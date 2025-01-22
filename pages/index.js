@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import '../styles/globals.css';
 
 export default function Chatroom() {
     const [messages, setMessages] = useState([]);
