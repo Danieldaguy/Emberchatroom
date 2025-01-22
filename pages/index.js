@@ -8,17 +8,6 @@ export default function Chatroom() {
     const [profilePicture, setProfilePicture] = useState('');
 
     useEffect(() => {
-        // Load username and PFP from localStorage if available
-        const savedUsername = localStorage.getItem('username');
-        const savedProfilePicture = localStorage.getItem('profilePicture');
-        
-        if (savedUsername) {
-            setUsername(savedUsername);
-        }
-        if (savedProfilePicture) {
-            setProfilePicture(savedProfilePicture);
-        }
-
         fetchMessages();
 
         const channel = supabase
@@ -55,77 +44,10 @@ export default function Chatroom() {
         e.preventDefault();
         if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
-        // Fetch IP and role for checking permissions
-        const { data: ipData } = await supabase.rpc('get_ip'); // Assume you have a stored procedure to fetch the user's IP
-        const { data: roleData } = await supabase
-            .from('roles')
-            .select('role')
-            .eq('ip_address', ipData)
-            .single();
-
-        const role = roleData ? roleData.role : 'user'; // Default to 'user'
-
-        // Insert the message with username, profile picture, and role
         await supabase
             .from('messages')
-            .insert([{ username, message: newMessage, profile_picture: profilePicture, ip: ipData, role }]);
-
+            .insert([{ username, message: newMessage, profile_picture: profilePicture }]);
         setNewMessage('');
-    };
-
-    const handleUsernameChange = (e) => {
-        const newUsername = e.target.value;
-        setUsername(newUsername);
-        localStorage.setItem('username', newUsername); // Save username to localStorage
-    };
-
-    const handleProfilePictureChange = (e) => {
-        const newPfp = e.target.value;
-        setProfilePicture(newPfp);
-        localStorage.setItem('profilePicture', newPfp); // Save profile picture URL to localStorage
-    };
-
-    const handleDelete = async (messageId) => {
-        const { data: ipData } = await supabase.rpc('get_ip');
-        const { data: roleData } = await supabase
-            .from('roles')
-            .select('role')
-            .eq('ip_address', ipData)
-            .single();
-
-        const role = roleData ? roleData.role : 'user';
-
-        const message = messages.find(msg => msg.id === messageId);
-
-        if (message.username === username || role === 'admin') {
-            await supabase
-                .from('messages')
-                .delete()
-                .eq('id', messageId);
-        }
-    };
-
-    const handleEdit = async (messageId) => {
-        const newMessage = prompt("Edit your message:");
-        if (!newMessage) return;
-
-        const { data: ipData } = await supabase.rpc('get_ip');
-        const { data: roleData } = await supabase
-            .from('roles')
-            .select('role')
-            .eq('ip_address', ipData)
-            .single();
-
-        const role = roleData ? roleData.role : 'user';
-
-        const message = messages.find(msg => msg.id === messageId);
-
-        if (message.username === username || role === 'admin') {
-            await supabase
-                .from('messages')
-                .update({ message: newMessage })
-                .eq('id', messageId);
-        }
     };
 
     return (
@@ -140,7 +62,7 @@ export default function Chatroom() {
                     id="username-input"
                     placeholder="Enter your username"
                     value={username}
-                    onChange={handleUsernameChange}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                 />
             </div>
@@ -152,7 +74,7 @@ export default function Chatroom() {
                     id="profile-picture-input"
                     placeholder="Enter image URL"
                     value={profilePicture}
-                    onChange={handleProfilePictureChange}
+                    onChange={(e) => setProfilePicture(e.target.value)}
                     required
                 />
             </div>
@@ -167,12 +89,6 @@ export default function Chatroom() {
                         />
                         <div>
                             <strong>{msg.username}:</strong> {msg.message}
-                            {msg.username === username && (
-                                <>
-                                    <button onClick={() => handleEdit(msg.id)}>Edit</button>
-                                    <button onClick={() => handleDelete(msg.id)}>Delete</button>
-                                </>
-                            )}
                         </div>
                     </div>
                 ))}
