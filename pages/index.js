@@ -4,28 +4,30 @@ import { supabase } from '../lib/supabaseClient';
 export default function Chatroom() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    const [username, setUsername] = useState('');
+    const [username, setUsername] = useState(''); // Initialize empty, set later in useEffect
     const [profilePicture, setProfilePicture] = useState('');
-    const [admin, setAdmin] = useState(false);  // Flag to check if user is admin
+    const [admin, setAdmin] = useState(false); // Flag to check if user is admin
+    const [isClient, setIsClient] = useState(false); // Detect client-side rendering
 
-    const adminUsernames = ['adminusername1', 'adminusername2'];  // List of admin usernames (case-insensitive)
+    const adminUsernames = ['adminusername1', 'adminusername2']; // List of admin usernames (case-insensitive)
 
-    // Only load username and profile picture from localStorage on client-side
+    // Detect client-side rendering
     useEffect(() => {
+        setIsClient(true);
+
         if (typeof window !== 'undefined') {
             const storedUsername = localStorage.getItem('username');
             const storedProfilePicture = localStorage.getItem('profilePicture');
             setUsername(storedUsername || '');
             setProfilePicture(storedProfilePicture || '');
         }
-    }, []);  // Empty dependency array ensures this effect runs only once after mount
+    }, []);
 
-    // Check if the user is an admin based on username (case-insensitive)
     useEffect(() => {
         if (adminUsernames.includes(username.toLowerCase())) {
             setAdmin(true);
         }
-    }, [username]);  // Run only when username changes
+    }, [username]);
 
     useEffect(() => {
         fetchMessages();
@@ -72,36 +74,25 @@ export default function Chatroom() {
             return;
         }
 
-        // Ensure username is unique (case-insensitive)
-        const { data: existingUser } = await supabase
-            .from('messages')
-            .select('username')
-            .eq('username', username.toLowerCase()) // Check case-insensitive
-            .single();
-
-        if (existingUser) {
-            alert('Username is already taken!');
-            return;
-        }
-
         await supabase
             .from('messages')
             .insert([{ username, message: newMessage, profile_picture: profilePicture }]);
         setNewMessage('');
     };
 
-    // Save username and profile picture to localStorage
     const handleUsernameChange = (e) => {
-        setUsername(e.target.value);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('username', e.target.value);
+        const value = e.target.value;
+        setUsername(value);
+        if (isClient) {
+            localStorage.setItem('username', value);
         }
     };
 
     const handleProfilePictureChange = (e) => {
-        setProfilePicture(e.target.value);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('profilePicture', e.target.value);
+        const value = e.target.value;
+        setProfilePicture(value);
+        if (isClient) {
+            localStorage.setItem('profilePicture', value);
         }
     };
 
@@ -116,7 +107,6 @@ export default function Chatroom() {
     };
 
     const banUser = async (usernameToBan) => {
-        // Ban user by updating their status in the 'users' table
         const { data, error } = await supabase
             .from('users')
             .update({ is_banned: true })
@@ -131,7 +121,6 @@ export default function Chatroom() {
     };
 
     const muteUser = async (usernameToMute) => {
-        // Mute user by updating their status in the 'users' table
         const { data, error } = await supabase
             .from('users')
             .update({ is_muted: true })
@@ -144,6 +133,10 @@ export default function Chatroom() {
 
         alert(`${usernameToMute} has been muted.`);
     };
+
+    if (!isClient) {
+        return null; // Prevent rendering on the server
+    }
 
     return (
         <div id="chat-container">
@@ -215,8 +208,6 @@ export default function Chatroom() {
             {admin && (
                 <div id="admin-panel">
                     <button onClick={clearChat}>Clear Chat</button>
-                    <button onClick={() => alert('Ban functionality is now accessible')}>Ban User</button>
-                    <button onClick={() => alert('Mute functionality is now accessible')}>Mute User</button>
                 </div>
             )}
         </div>
