@@ -1,29 +1,29 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import '../styles/globals.css'; // Import your CSS file globally
+import '../styles/globals.css';
 
 export default function Chatroom() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [username, setUsername] = useState('');
+    const [profilePicture, setProfilePicture] = useState('');
 
     useEffect(() => {
         fetchMessages();
 
         const channel = supabase
-            .channel('realtime:messages') // Create a new channel
+            .channel('realtime:messages')
             .on(
-                'postgres_changes', // Listen to changes
-                { event: 'INSERT', schema: 'public', table: 'messages' }, // Subscribe to insert events
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'messages' },
                 (payload) => {
                     setMessages((prev) => [...prev, payload.new]);
                 }
             )
-            .subscribe(); // Subscribe to real-time updates
+            .subscribe();
 
-        // Cleanup on component unmount
         return () => {
-            supabase.removeChannel(channel); // Remove the channel when component unmounts
+            supabase.removeChannel(channel);
         };
     }, []);
 
@@ -43,11 +43,11 @@ export default function Chatroom() {
 
     const sendMessage = async (e) => {
         e.preventDefault();
-        if (!newMessage.trim() || !username.trim()) return;
+        if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
         await supabase
             .from('messages')
-            .insert([{ username, message: newMessage }]);
+            .insert([{ username, message: newMessage, profile_picture: profilePicture }]);
         setNewMessage('');
     };
 
@@ -68,10 +68,29 @@ export default function Chatroom() {
                 />
             </div>
 
+            <div id="profile-picture-container">
+                Profile Picture URL:
+                <input
+                    type="text"
+                    id="profile-picture-input"
+                    placeholder="Enter image URL"
+                    value={profilePicture}
+                    onChange={(e) => setProfilePicture(e.target.value)}
+                    required
+                />
+            </div>
+
             <div id="messages">
                 {messages.map((msg) => (
-                    <div key={msg.id}>
-                        <strong>{msg.username}:</strong> {msg.message}
+                    <div key={msg.id} className="message">
+                        <img
+                            src={msg.profile_picture || '/default-avatar.png'}
+                            alt="PFP"
+                            className="pfp"
+                        />
+                        <div>
+                            <strong>{msg.username}:</strong> {msg.message}
+                        </div>
                     </div>
                 ))}
             </div>
