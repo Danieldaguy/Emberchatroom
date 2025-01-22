@@ -8,6 +8,8 @@ export default function Chatroom() {
     const [profilePicture, setProfilePicture] = useState(localStorage.getItem('profilePicture') || '');  // Load from localStorage
     const [admin, setAdmin] = useState(false);  // Flag to check if user is admin
 
+    const adminUsernames = ['Dangy', 'KingDino'];  // List of admin usernames (case-insensitive)
+
     useEffect(() => {
         fetchMessages();
 
@@ -18,9 +20,9 @@ export default function Chatroom() {
             })
             .subscribe();
 
-        // Check if the user is an admin based on username
-        if (username === 'adminUsername') {
-            setAdmin(true);  // Replace 'adminUsername' with the actual admin username
+        // Check if the user is an admin based on username (case-insensitive)
+        if (adminUsernames.includes(username.toLowerCase())) {
+            setAdmin(true);
         }
 
         return () => {
@@ -46,11 +48,23 @@ export default function Chatroom() {
         e.preventDefault();
         if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
-        // Ensure username is unique
+        // Check if user is banned
+        const { data: user } = await supabase
+            .from('users')
+            .select('is_banned')
+            .eq('username', username.toLowerCase())
+            .single();
+
+        if (user && user.is_banned) {
+            alert('You are banned and cannot send messages.');
+            return;
+        }
+
+        // Ensure username is unique (case-insensitive)
         const { data: existingUser } = await supabase
             .from('messages')
             .select('username')
-            .eq('username', username)
+            .eq('username', username.toLowerCase()) // Check case-insensitive
             .single();
 
         if (existingUser) {
@@ -73,6 +87,46 @@ export default function Chatroom() {
     const handleProfilePictureChange = (e) => {
         setProfilePicture(e.target.value);
         localStorage.setItem('profilePicture', e.target.value);
+    };
+
+    const clearChat = async () => {
+        await supabase.from('messages').delete();
+        setMessages([]);
+    };
+
+    const deleteMessage = async (messageId) => {
+        await supabase.from('messages').delete().eq('id', messageId);
+        setMessages(messages.filter(msg => msg.id !== messageId));
+    };
+
+    const banUser = async (usernameToBan) => {
+        // Ban user by updating their status in the 'users' table
+        const { data, error } = await supabase
+            .from('users')
+            .update({ is_banned: true })
+            .eq('username', usernameToBan.toLowerCase());
+
+        if (error) {
+            console.error('Error banning user:', error);
+            return;
+        }
+
+        alert(`${usernameToBan} has been banned.`);
+    };
+
+    const muteUser = async (usernameToMute) => {
+        // Mute user by updating their status in the 'users' table
+        const { data, error } = await supabase
+            .from('users')
+            .update({ is_muted: true })
+            .eq('username', usernameToMute.toLowerCase());
+
+        if (error) {
+            console.error('Error muting user:', error);
+            return;
+        }
+
+        alert(`${usernameToMute} has been muted.`);
     };
 
     return (
@@ -115,7 +169,12 @@ export default function Chatroom() {
                         <div>
                             <strong>{msg.username}:</strong> {msg.message}
                             {admin && (
-                                <button onClick={() => deleteMessage(msg.id)}>Delete</button>  // Admin deletes messages
+                                <div>
+                                    <button onClick={() => deleteMessage(msg.id)}>Delete</button>
+                                    {/* Example of banning or muting a user */}
+                                    <button onClick={() => banUser(msg.username)}>Ban User</button>
+                                    <button onClick={() => muteUser(msg.username)}>Mute User</button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -134,38 +193,17 @@ export default function Chatroom() {
                 <button type="submit">Send</button>
             </form>
 
-            <button id="clear-chat-btn" onClick={() => setMessages([])}>
+            <button id="clear-chat-btn" onClick={clearChat}>
                 Clear Chat
             </button>
 
             {admin && (
                 <div id="admin-panel">
                     <button onClick={clearChat}>Clear Chat</button>
-                    <button onClick={banUser}>Ban User</button>
-                    <button onClick={muteUser}>Mute User</button>
+                    <button onClick={() => alert('Ban functionality is now accessible')}>Ban User</button>
+                    <button onClick={() => alert('Mute functionality is now accessible')}>Mute User</button>
                 </div>
             )}
         </div>
     );
-
-    // Admin functions
-    const clearChat = async () => {
-        await supabase.from('messages').delete();
-        setMessages([]);
-    };
-
-    const deleteMessage = async (messageId) => {
-        await supabase.from('messages').delete().eq('id', messageId);
-        setMessages(messages.filter(msg => msg.id !== messageId));
-    };
-
-    const banUser = () => {
-        // Implement banning logic here
-        alert('User banned');
-    };
-
-    const muteUser = () => {
-        // Implement mute logic here
-        alert('User muted');
-    };
 }
