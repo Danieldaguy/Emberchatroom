@@ -6,8 +6,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: background-color 0.3s, color 0.3s;
   overflow: hidden;
+  position: relative;
 }
 
 :root {
