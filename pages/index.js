@@ -6,11 +6,14 @@ export default function Chatroom() {
   const [newMessage, setNewMessage] = useState('');
   const [username, setUsername] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
-  const [theme, setTheme] = useState('default'); // Add theme state
-  const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState('default'); // Theme state
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 2000); // Simulated loading screen
+    // Simulate loading screen
+    setTimeout(() => setLoading(false), 2000);
+
+    // Retrieve stored preferences
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) setTheme(storedTheme);
 
@@ -33,10 +36,6 @@ export default function Chatroom() {
     };
   }, []);
 
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
-
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
@@ -50,16 +49,29 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString(); // Add timestamp
     await supabase
       .from('messages')
       .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
     setNewMessage('');
   };
 
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    setUsername(value);
+    localStorage.setItem('username', value);
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const value = e.target.value;
+    setProfilePicture(value);
+    localStorage.setItem('profilePicture', value);
+  };
+
   const changeTheme = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    document.body.setAttribute('data-theme', newTheme);
   };
 
   if (loading) {
@@ -71,35 +83,13 @@ export default function Chatroom() {
       <h1>🔥•LitChat V1•🔥</h1>
       <h5>By 🔥•Ember Studios•🔥</h5>
 
-      <div id="username-container">
-        <label>Username:</label>
-        <input
-          type="text"
-          placeholder="Enter your username"
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            localStorage.setItem('username', e.target.value);
-          }}
-        />
-      </div>
-
-      <div id="profile-picture-container">
-        <label>Profile Picture URL:</label>
-        <input
-          type="text"
-          placeholder="Enter image URL"
-          value={profilePicture}
-          onChange={(e) => {
-            setProfilePicture(e.target.value);
-            localStorage.setItem('profilePicture', e.target.value);
-          }}
-        />
-      </div>
-
-      <div>
-        <label>Theme:</label>
-        <select value={theme} onChange={(e) => changeTheme(e.target.value)}>
+      <div id="theme-selector">
+        <label htmlFor="theme-dropdown">Theme:</label>
+        <select
+          id="theme-dropdown"
+          value={theme}
+          onChange={(e) => changeTheme(e.target.value)}
+        >
           <option value="default">Default</option>
           <option value="sunset">Sunset</option>
           <option value="fire">Fire</option>
@@ -107,6 +97,26 @@ export default function Chatroom() {
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
+      </div>
+
+      <div id="username-container">
+        <label>Username:</label>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={handleUsernameChange}
+        />
+      </div>
+
+      <div id="profile-picture-container">
+        <label>Profile Picture URL:</label>
+        <input
+          type="text"
+          placeholder="Enter your profile picture URL"
+          value={profilePicture}
+          onChange={handleProfilePictureChange}
+        />
       </div>
 
       <div id="messages">
@@ -118,7 +128,7 @@ export default function Chatroom() {
               className="pfp"
             />
             <div>
-              <strong className="username">{msg.username}</strong>{' '}
+              <strong className="username">{msg.username}</strong>
               <span className="timestamp">
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </span>
