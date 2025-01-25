@@ -1,12 +1,149 @@
+
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #1a1a1a;
-  color: #e0e0e0;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+:root {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --accent-color: #ffc107;
+  --message-bg: #2c2c2c;
+  --input-bg: #333;
+}
+
+body[data-theme="sunset"] {
+  --bg-color: #ff7e5f;
+  --text-color: #ffffff;
+  --accent-color: #fc4a1a;
+  --message-bg: #feb47b;
+  --input-bg: #ff8360;
+}
+
+body[data-theme="fire"] {
+  --bg-color: #8b0000;
+  --text-color: #ffffff;
+  --accent-color: #ff4500;
+  --message-bg: #ff6347;
+  --input-bg: #ff4500;
+}
+
+body[data-theme="void"] {
+  --bg-color: #000000;
+  --text-color: #666666;
+  --accent-color: #9400d3;
+  --message-bg: #1a1a1a;
+  --input-bg: #2e2e2e;
+}
+
+body[data-theme="light"] {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --accent-color: #ffc107;
+  --message-bg: #f4f4f4;
+  --input-bg: #ddd;
+}
+
+body[data-theme="dark"] {
+  --bg-color: #181818;
+  --text-color: #ffffff;
+  --accent-color: #ffc107;
+  --message-bg: #222;
+  --input-bg: #444;
+}
+
+/* Apply Variables */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+h1, h5 {
+  color: var(--accent-color);
+}
+
+#chat-container {
+  background: var(--message-bg);
+}
+
+input[type="text"] {
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+
+button {
+  background-color: var(--accent-color);
+  color: var(--bg-color);
+}
+
+button:hover {
+  background-color: lighten(var(--accent-color), 10%);
+}
+
+/* Message Animations */
+.message {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading Screen */
+#loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-color);
+  color: var(--accent-color);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: lighten(var(--accent-color), 10%);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+/* Timestamps */
+.timestamp {
+  font-size: 0.8em;
+  color: var(--text-color);
+  opacity: 0.7;
 }
 
 h1 {
