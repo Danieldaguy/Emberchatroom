@@ -96,6 +96,27 @@ export default function Chatroom() {
       particle.style.animationDelay = `${Math.random() * 5}s`;
       container.appendChild(particle);
     }
+
+    // Initialize particles.js with settings based on theme
+    if (theme === 'fire' || theme === 'blue-fire' || theme === 'acid') {
+      window.particlesJS('particle-container', {
+        particles: {
+          number: {
+            value: 100,
+          },
+          size: {
+            value: 3,
+          },
+          move: {
+            speed: 1,
+            direction: 'top',
+          },
+          color: {
+            value: theme === 'fire' ? '#ff6347' : theme === 'blue-fire' ? '#66ccff' : '#66ff33',
+          },
+        },
+      });
+    }
   };
 
   const removeParticles = () => {
@@ -187,4 +208,4 @@ export default function Chatroom() {
       </form>
     </div>
   );
-} 
+}
