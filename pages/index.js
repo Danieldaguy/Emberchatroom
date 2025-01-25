@@ -7,12 +7,10 @@ export default function Chatroom() {
   const [username, setUsername] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [theme, setTheme] = useState('default'); // Add theme state
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading screen
-    setTimeout(() => setLoading(false), 2000);
-
+    setTimeout(() => setLoading(false), 2000); // Simulated loading screen
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) setTheme(storedTheme);
 
@@ -35,6 +33,10 @@ export default function Chatroom() {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
+
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
@@ -48,7 +50,7 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
-    const timestamp = new Date().toISOString(); // Add timestamp
+    const timestamp = new Date().toISOString();
     await supabase
       .from('messages')
       .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
@@ -58,7 +60,6 @@ export default function Chatroom() {
   const changeTheme = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.body.setAttribute('data-theme', newTheme);
   };
 
   if (loading) {
@@ -69,6 +70,32 @@ export default function Chatroom() {
     <div id="chat-container">
       <h1>🔥•LitChat V1•🔥</h1>
       <h5>By 🔥•Ember Studios•🔥</h5>
+
+      <div id="username-container">
+        <label>Username:</label>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            localStorage.setItem('username', e.target.value);
+          }}
+        />
+      </div>
+
+      <div id="profile-picture-container">
+        <label>Profile Picture URL:</label>
+        <input
+          type="text"
+          placeholder="Enter image URL"
+          value={profilePicture}
+          onChange={(e) => {
+            setProfilePicture(e.target.value);
+            localStorage.setItem('profilePicture', e.target.value);
+          }}
+        />
+      </div>
 
       <div>
         <label>Theme:</label>
@@ -91,7 +118,10 @@ export default function Chatroom() {
               className="pfp"
             />
             <div>
-              <strong className="username">{msg.username}</strong> <span className="timestamp">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+              <strong className="username">{msg.username}</strong>{' '}
+              <span className="timestamp">
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </span>
               <p>{msg.message}</p>
             </div>
           </div>
