@@ -6,16 +6,18 @@ export default function Chatroom() {
   const [newMessage, setNewMessage] = useState('');
   const [username, setUsername] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
-  const [theme, setTheme] = useState('default'); // Theme state
-  const [loading, setLoading] = useState(true); // Loading state
+  const [theme, setTheme] = useState('default');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Simulate loading screen
-    setTimeout(() => setLoading(false), 2000);
+    setTimeout(() => setLoading(false), 3000);
 
-    // Retrieve stored preferences
     const storedTheme = localStorage.getItem('theme');
-    if (storedTheme) setTheme(storedTheme);
+    if (storedTheme) {
+      setTheme(storedTheme);
+      document.body.setAttribute('data-theme', storedTheme);
+    }
 
     const storedUsername = localStorage.getItem('username');
     const storedProfilePicture = localStorage.getItem('profilePicture');
@@ -31,8 +33,12 @@ export default function Chatroom() {
       })
       .subscribe();
 
+    // Add particle effects for themes with particles
+    addParticles(storedTheme || 'default');
+
     return () => {
       supabase.removeChannel(channel);
+      removeParticles();
     };
   }, []);
 
@@ -49,7 +55,7 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
 
-    const timestamp = new Date().toISOString(); // Add timestamp
+    const timestamp = new Date().toISOString();
     await supabase
       .from('messages')
       .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
@@ -72,10 +78,40 @@ export default function Chatroom() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.body.setAttribute('data-theme', newTheme);
+    removeParticles();
+    addParticles(newTheme);
+  };
+
+  const addParticles = (theme) => {
+    const container = document.createElement('div');
+    container.id = 'particle-container';
+    document.body.appendChild(container);
+
+    const particleCount = theme === 'void' || theme === 'fire' || theme === 'blue-fire' || theme === 'acid' ? 50 : 0;
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      particle.className = `particle ${theme}-particle`;
+      particle.style.left = `${Math.random() * 100}vw`;
+      particle.style.animationDelay = `${Math.random() * 5}s`;
+      container.appendChild(particle);
+    }
+  };
+
+  const removeParticles = () => {
+    const container = document.getElementById('particle-container');
+    if (container) container.remove();
   };
 
   if (loading) {
-    return <div id="loading-screen">🔥 Loading LitChat... 🔥</div>;
+    return (
+      <div id="loading-screen">
+        <h1>🔥 Loading LitChat... 🔥</h1>
+        <div id="loading-bar">
+          <span></span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -93,7 +129,9 @@ export default function Chatroom() {
           <option value="default">Default</option>
           <option value="sunset">Sunset</option>
           <option value="fire">Fire</option>
+          <option value="blue-fire">Blue Fire</option>
           <option value="void">Void</option>
+          <option value="acid">Acid</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
         </select>
