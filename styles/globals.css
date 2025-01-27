@@ -8,6 +8,8 @@ body {
   align-items: center;
   overflow: hidden;
   position: relative;
+  background-size: cover;
+  background-attachment: fixed; /* Fix the background to prevent movement */
 }
 
 :root {
@@ -32,6 +34,8 @@ body[data-theme="sunset"] {
   --container-bg: rgba(255, 106, 106, 0.8);
   --message-hover: #ff8967;
   --scrollbar-thumb: #ff7849;
+  background-repeat: no-repeat; /* Prevent background repetition */
+  background-size: cover;
 }
 
 /* Fire Theme */
@@ -186,9 +190,34 @@ button:hover {
   background-color: lighten(var(--accent-color), 10%);
 }
 
+/* Theme Dropdown */
+#theme-selector label {
+  font-size: 1em;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+select {
+  padding: 10px 15px;
+  font-size: 1em;
+  background: var(--container-bg);
+  color: var(--text-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+select:hover,
+select:focus {
+  border-color: lighten(var(--accent-color), 15%);
+}
+
 /* Loading Screen */
 #loading-screen {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   position: fixed;
