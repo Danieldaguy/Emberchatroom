@@ -9,12 +9,11 @@ body {
   overflow: hidden;
   position: relative;
   background-size: cover;
-  background-attachment: fixed; /* Fix background during scroll */
-  transition: background-color 0.3s, color 0.3s;
+  background-attachment: fixed; /* Fix the background to prevent movement */
 }
 
+/* Default Theme Variables */
 :root {
-  /* Default Theme Variables */
   --bg-color: #1a1a1a;
   --text-color: #e0e0e0;
   --accent-color: #ffc107;
@@ -27,26 +26,36 @@ body {
 
 /* Sunset Theme */
 body[data-theme="sunset"] {
-  --bg-color: linear-gradient(45deg, #f9d423, #ff4e50, #66c3ff);
-  --text-color: #ffffff;
-  --accent-color: #ff7849;
+  --bg-color: linear-gradient(180deg, #f9d423, #ff4e50, #66c3ff);
+  --text-color: #ffffff; /* Ensure text contrasts the background */
+  --accent-color: #ff7849; /* Highlight color for buttons and accents */
   --message-bg: rgba(255, 135, 83, 0.9);
   --input-bg: rgba(255, 188, 125, 0.9);
   --container-bg: rgba(255, 106, 106, 0.8);
   --message-hover: #ff8967;
   --scrollbar-thumb: #ff7849;
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretch to fit the entire page */
+  background-repeat: no-repeat; /* Prevent background from repeating */
+  background-attachment: fixed; /* Make the background fixed during scroll */
 }
 
 /* Fire Theme */
 body[data-theme="fire"] {
   --bg-color: radial-gradient(circle, #ff4500, #ff6347, #ff0000);
-  --text-color: #fff9f0;
-  --accent-color: #ff2400;
-  --message-bg: rgba(255, 69, 0, 0.9);
-  --input-bg: rgba(255, 99, 71, 0.9);
-  --container-bg: rgba(255, 0, 0, 0.8);
-  --message-hover: #ff6347;
-  --scrollbar-thumb: #ff2400;
+  --text-color: #fff9f0; /* Slightly off-white for warmth */
+  --accent-color: #ff2400; /* Deep red for highlights */
+  --message-bg: rgba(255, 69, 0, 0.9); /* Fiery red-orange for message background */
+  --input-bg: rgba(255, 99, 71, 0.9); /* Lighter red for inputs */
+  --container-bg: rgba(255, 0, 0, 0.8); /* Solid red for chat container */
+  --message-hover: #ff6347; /* Bright red for hover effect */
+  --scrollbar-thumb: #ff2400; /* Red for scrollbar thumb */
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretches background */
+  background-repeat: no-repeat; /* Prevent background from repeating */
+  background-attachment: fixed; /* Fixed background during scroll */
 }
 
 /* Blue Fire Theme */
@@ -59,6 +68,11 @@ body[data-theme="blue-fire"] {
   --container-bg: rgba(0, 76, 153, 0.85);
   --message-hover: rgba(0, 91, 179, 0.9);
   --scrollbar-thumb: #66ccff;
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretches background */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Void Theme */
@@ -71,6 +85,11 @@ body[data-theme="void"] {
   --container-bg: #181818;
   --message-hover: #252525;
   --scrollbar-thumb: #5c5cff;
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretches background */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Light Theme */
@@ -83,6 +102,11 @@ body[data-theme="light"] {
   --container-bg: #ffffff;
   --message-hover: #dddddd;
   --scrollbar-thumb: #2196f3;
+
+  background-image: var(--bg-color);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Acid Theme */
@@ -95,6 +119,11 @@ body[data-theme="acid"] {
   --container-bg: rgba(68, 204, 68, 0.85);
   --message-hover: rgba(85, 255, 85, 0.9);
   --scrollbar-thumb: #66ff33;
+
+  background-image: var(--bg-color);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Apply Variables */
@@ -115,7 +144,6 @@ h1, h5 {
   padding: 25px;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
   overflow: hidden;
-  margin-bottom: 20px;
 }
 
 #messages {
