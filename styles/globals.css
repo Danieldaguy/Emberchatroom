@@ -9,7 +9,7 @@ body {
   overflow: hidden;
   position: relative;
   background-size: cover;
-  background-attachment: fixed;
+  background-attachment: fixed; /* Fix background during scroll */
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -27,7 +27,7 @@ body {
 
 /* Sunset Theme */
 body[data-theme="sunset"] {
-  --bg-color: linear-gradient(45deg, #ff9a8b, #ff6a88, #ff5f65);
+  --bg-color: linear-gradient(45deg, #f9d423, #ff4e50, #66c3ff);
   --text-color: #ffffff;
   --accent-color: #ff7849;
   --message-bg: rgba(255, 135, 83, 0.9);
@@ -35,35 +35,18 @@ body[data-theme="sunset"] {
   --container-bg: rgba(255, 106, 106, 0.8);
   --message-hover: #ff8967;
   --scrollbar-thumb: #ff7849;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 /* Fire Theme */
 body[data-theme="fire"] {
   --bg-color: radial-gradient(circle, #ff4500, #ff6347, #ff0000);
-  --text-color: #ffffff;
+  --text-color: #fff9f0;
   --accent-color: #ff2400;
   --message-bg: rgba(255, 69, 0, 0.9);
   --input-bg: rgba(255, 99, 71, 0.9);
   --container-bg: rgba(255, 0, 0, 0.8);
   --message-hover: #ff6347;
   --scrollbar-thumb: #ff2400;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  animation: fireAnim 4s infinite linear;
-}
-
-/* Fire Animation */
-@keyframes fireAnim {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 /* Blue Fire Theme */
@@ -76,9 +59,6 @@ body[data-theme="blue-fire"] {
   --container-bg: rgba(0, 76, 153, 0.85);
   --message-hover: rgba(0, 91, 179, 0.9);
   --scrollbar-thumb: #66ccff;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 /* Void Theme */
@@ -91,9 +71,6 @@ body[data-theme="void"] {
   --container-bg: #181818;
   --message-hover: #252525;
   --scrollbar-thumb: #5c5cff;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 /* Light Theme */
@@ -106,9 +83,6 @@ body[data-theme="light"] {
   --container-bg: #ffffff;
   --message-hover: #dddddd;
   --scrollbar-thumb: #2196f3;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 /* Acid Theme */
@@ -121,9 +95,6 @@ body[data-theme="acid"] {
   --container-bg: rgba(68, 204, 68, 0.85);
   --message-hover: rgba(85, 255, 85, 0.9);
   --scrollbar-thumb: #66ff33;
-  background-size: cover;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
 }
 
 /* Apply Variables */
@@ -144,6 +115,7 @@ h1, h5 {
   padding: 25px;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
   overflow: hidden;
+  margin-bottom: 20px;
 }
 
 #messages {
