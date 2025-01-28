@@ -27,16 +27,18 @@ body {
 /* Sunset Theme */
 body[data-theme="sunset"] {
   --bg-color: linear-gradient(180deg, #f9d423, #ff4e50, #66c3ff);
-  --text-color: #ffffff;
-  --accent-color: #ff7849;
+  --text-color: #ffffff; /* Ensure text contrasts the background */
+  --accent-color: #ff7849; /* Highlight color for buttons and accents */
   --message-bg: rgba(255, 135, 83, 0.9);
   --input-bg: rgba(255, 188, 125, 0.9);
   --container-bg: rgba(255, 106, 106, 0.8);
   --message-hover: #ff8967;
   --scrollbar-thumb: #ff7849;
-  background-repeat: no-repeat;
-  background-size: cover; /* Stretch to fit the page */
-  background-attachment: fixed; /* Fix background to prevent scroll movement */
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretch to fit the entire page */
+  background-repeat: no-repeat; /* Prevent background from repeating */
+  background-attachment: fixed; /* Make the background fixed during scroll */
 }
 
 /* Fire Theme */
