@@ -40,16 +40,50 @@ body[data-theme="sunset"] {
   background-repeat: no-repeat; /* Prevent background from repeating */
   background-attachment: fixed; /* Make the background fixed during scroll */
 }
+
 /* Fire Theme */
 body[data-theme="fire"] {
-  --bg-color: radial-gradient(circle, #ff4500, #ff6347, #ff4500);
-  --text-color: #ffffff;
-  --accent-color: #ffbf00;
-  --message-bg: rgba(255, 69, 0, 0.8);
-  --input-bg: rgba(255, 140, 0, 0.9);
-  --container-bg: rgba(255, 87, 51, 0.85);
-  --message-hover: rgba(255, 100, 50, 0.9);
-  --scrollbar-thumb: #ffbf00;
+  --bg-color: linear-gradient(180deg, #ff4500, #ff6347, #ff0000);
+  --text-color: #fff9f0; /* Slightly off-white for warmth */
+  --accent-color: #ff2400; /* Deep red for highlights */
+  --message-bg: rgba(255, 69, 0, 0.9); /* Fiery red-orange for message background */
+  --input-bg: rgba(255, 99, 71, 0.9); /* Lighter red for inputs */
+  --container-bg: rgba(255, 0, 0, 0.8); /* Solid red for chat container */
+  --message-hover: #ff6347; /* Bright red for hover effect */
+  --scrollbar-thumb: #ff2400; /* Red for scrollbar thumb */
+
+  background-image: var(--bg-color);
+  background-size: cover; /* Stretches background */
+  background-repeat: no-repeat; /* Prevent background from repeating */
+  background-attachment: fixed; /* Fixed background during scroll */
+}
+
+/* Fire Particles */
+body[data-theme="fire"]::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 69, 0, 0.6) 10%, transparent 70%), 
+                    radial-gradient(circle, rgba(255, 99, 71, 0.5) 10%, transparent 80%);
+  background-size: 50px 50px;
+  animation: fire-particles 3s infinite linear;
+  z-index: -1;
+}
+
+/* Fire Particle Animation */
+@keyframes fire-particles {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
 }
 
 /* Blue Fire Theme */
