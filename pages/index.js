@@ -1,107 +1,106 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react'; 
 import { supabase } from '../lib/supabaseClient';
 
-export default function Chatroom() {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [username, setUsername] = useState(localStorage.getItem('username') || '');
-  const [profilePicture, setProfilePicture] = useState(localStorage.getItem('profilePicture') || '');
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
+export default function Chatroom() { 
+  const [messages, setMessages] = useState([]); 
+  const [newMessage, setNewMessage] = useState(''); 
+  const [username, setUsername] = useState(''); 
+  const [profilePicture, setProfilePicture] = useState(''); 
+  const [theme, setTheme] = useState('default'); 
   const [loading, setLoading] = useState(true);
 
-  const messagesEndRef = useRef(null);
+  useEffect(() => { 
+    // Simulate loading screen 
+    setTimeout(() => setLoading(false), 3000);
 
-  useEffect(() => {
-    // Simulate loading screen
-    setTimeout(() => setLoading(false), 2000);
+    // Check if we are in the browser
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem('theme'); 
+      if (storedTheme) { 
+        setTheme(storedTheme); 
+        document.body.setAttribute('data-theme', storedTheme); 
+      }
 
-    // Apply stored theme
-    document.body.setAttribute('data-theme', theme);
+      const storedUsername = localStorage.getItem('username'); 
+      const storedProfilePicture = localStorage.getItem('profilePicture'); 
+      setUsername(storedUsername || ''); 
+      setProfilePicture(storedProfilePicture || '');
+    }
 
-    // Fetch messages
     fetchMessages();
 
-    // Realtime listener
-    const channel = supabase
-      .channel('realtime:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
-      })
+    const channel = supabase 
+      .channel('realtime:messages') 
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => { 
+        setMessages((prev) => [...prev, payload.new]); 
+      }) 
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => { supabase.removeChannel(channel); };
+
   }, []);
 
-  useEffect(() => {
-    // Scroll to the latest message
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const fetchMessages = async () => { 
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('timestamp', { ascending: true });
 
-  useEffect(() => {
-    // Update theme dynamically
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const fetchMessages = async () => {
-    const { data, error } = await supabase.from('messages').select('*').order('timestamp', { ascending: true });
-    if (error) {
-      console.error('Error fetching messages:', error);
-    } else {
-      setMessages(data || []);
-    }
+    if (!error) setMessages(data || []);
   };
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
+  const sendMessage = async (e) => { 
+    e.preventDefault(); 
     if (!newMessage.trim() || !username.trim()) return;
 
-    const timestamp = new Date().toISOString();
-    const pfpToUse = profilePicture.trim() || '/default-avatar.png';
+    const timestamp = new Date().toISOString(); 
+    const pfpToUse = profilePicture.trim() || '/default-avatar.png'; // Use default PFP if none provided
 
-    const { error } = await supabase.from('messages').insert([
-      { username, message: newMessage, profile_picture: pfpToUse, timestamp },
-    ]);
+    await supabase
+      .from('messages')
+      .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]); 
+    setNewMessage('');
+  };
 
-    if (error) {
-      console.error('Error sending message:', error);
-    } else {
-      setNewMessage('');
+  const handleUsernameChange = (e) => { 
+    const value = e.target.value; 
+    setUsername(value); 
+    if (typeof window !== 'undefined') { 
+      localStorage.setItem('username', value); 
     }
   };
 
-  const handleUsernameChange = (e) => {
-    const value = e.target.value;
-    setUsername(value);
-    localStorage.setItem('username', value);
+  const handleProfilePictureChange = (e) => { 
+    setProfilePicture(e.target.value); 
   };
 
-  const handleProfilePictureChange = (e) => {
-    setProfilePicture(e.target.value);
-    localStorage.setItem('profilePicture', e.target.value);
-  };
-
-  if (loading) {
-    return (
-      <div id="loading-screen">
-        <h1>🔥 Loading LitChat... 🔥</h1>
-        <div id="loading-bar"><span></span></div>
-      </div>
-    );
+  if (loading) { 
+    return ( 
+      <div id="loading-screen"> 
+        <h1>🔥 Loading LitChat... 🔥</h1> 
+        <div id="loading-bar"> 
+          <span></span> 
+        </div> 
+      </div> 
+    ); 
   }
 
-  return (
-    <div id="chat-container">
-      <h1>🔥•LitChat V1•🔥</h1>
+  return ( 
+    <div id="chat-container"> 
+      <h1>🔥•LitChat V1•🔥</h1> 
       <h5>By 🔥•Ember Studios•🔥</h5>
 
-      {/* Theme Selector */}
       <div id="theme-selector">
         <label htmlFor="theme-dropdown">Theme:</label>
         <select
           id="theme-dropdown"
           value={theme}
-          onChange={(e) => setTheme(e.target.value)}
+          onChange={(e) => {
+            setTheme(e.target.value);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('theme', e.target.value);
+            }
+          }}
         >
           <option value="default">Default</option>
           <option value="sunset">Sunset</option>
@@ -114,7 +113,6 @@ export default function Chatroom() {
         </select>
       </div>
 
-      {/* Username Input */}
       <div id="username-container">
         <label>Username:</label>
         <input
@@ -123,9 +121,8 @@ export default function Chatroom() {
           value={username}
           onChange={handleUsernameChange}
         />
-      </div>
+      </div> 
 
-      {/* Profile Picture Input */}
       <div id="profile-picture-container">
         <label>Profile Picture URL:</label>
         <input
@@ -136,7 +133,6 @@ export default function Chatroom() {
         />
       </div>
 
-      {/* Messages Container */}
       <div id="messages">
         {messages.map((msg) => (
           <div key={msg.id} className="message">
@@ -154,11 +150,8 @@ export default function Chatroom() {
             </div>
           </div>
         ))}
-        {/* Invisible div to scroll to bottom */}
-        <div ref={messagesEndRef}></div>
       </div>
 
-      {/* Message Input Form */}
       <form id="send-form" onSubmit={sendMessage}>
         <input
           type="text"
@@ -167,7 +160,7 @@ export default function Chatroom() {
           onChange={(e) => setNewMessage(e.target.value)}
         />
         <button type="submit">Send</button>
-      </form>
-    </div>
-  );
+      </form> 
+    </div> 
+  ); 
 }
