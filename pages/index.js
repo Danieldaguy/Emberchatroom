@@ -1,18 +1,18 @@
-import { useEffect, useState, useRef } from 'react'; 
+import { useEffect, useState, useRef } from 'react'; // Import useRef here
 import { supabase } from '../lib/supabaseClient';
 
-export default function Chatroom() { 
-  const [messages, setMessages] = useState([]); 
-  const [newMessage, setNewMessage] = useState(''); 
-  const [username, setUsername] = useState(''); 
-  const [profilePicture, setProfilePicture] = useState(''); 
-  const [theme, setTheme] = useState('default'); 
+export default function Chatroom() {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [username, setUsername] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
+  const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState(new Set()); // Track users who are typing
   const typingTimeout = 2000; // Timeout for when to stop showing typing users
   const typingTimerRef = useRef(null); // To manage the typing timeout
 
-  useEffect(() => { 
+  useEffect(() => {
     setTimeout(() => setLoading(false), 3000);
 
     if (typeof window !== 'undefined') {
@@ -31,7 +31,7 @@ export default function Chatroom() {
 
     fetchMessages();
 
-    const channel = supabase 
+    const channel = supabase
       .channel('realtime:messages') 
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => { 
         setMessages((prev) => [...prev, payload.new]); 
@@ -39,9 +39,10 @@ export default function Chatroom() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
+
   }, []);
 
-  const fetchMessages = async () => { 
+  const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
       .select('*')
@@ -50,8 +51,8 @@ export default function Chatroom() {
     if (!error) setMessages(data || []);
   };
 
-  const sendMessage = async (e) => { 
-    e.preventDefault(); 
+  const sendMessage = async (e) => {
+    e.preventDefault();
     if (!newMessage.trim() || !username.trim()) return;
 
     const timestamp = new Date().toISOString(); 
@@ -64,16 +65,16 @@ export default function Chatroom() {
     scrollToBottom();
   };
 
-  const handleUsernameChange = (e) => { 
-    const value = e.target.value; 
-    setUsername(value); 
-    if (typeof window !== 'undefined') { 
-      localStorage.setItem('username', value); 
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    setUsername(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('username', value);
     }
   };
 
-  const handleProfilePictureChange = (e) => { 
-    setProfilePicture(e.target.value); 
+  const handleProfilePictureChange = (e) => {
+    setProfilePicture(e.target.value);
   };
 
   const handleTyping = () => {
@@ -104,15 +105,15 @@ export default function Chatroom() {
   // Debugging logs
   console.log('Current theme:', theme);
 
-  if (loading) { 
-    return ( 
-      <div id="loading-screen"> 
-        <h1>🔥 Loading LitChat... 🔥</h1> 
-        <div id="loading-bar"> 
-          <span></span> 
-        </div> 
-      </div> 
-    ); 
+  if (loading) {
+    return (
+      <div id="loading-screen">
+        <h1>🔥 Loading LitChat... 🔥</h1>
+        <div id="loading-bar">
+          <span></span>
+        </div>
+      </div>
+    );
   }
 
   const typingText = () => {
@@ -127,9 +128,9 @@ export default function Chatroom() {
     return '';
   };
 
-  return ( 
-    <div id="chat-container"> 
-      <h1>🔥•LitChat V1•🔥</h1> 
+  return (
+    <div id="chat-container">
+      <h1>🔥•LitChat V1•🔥</h1>
       <h5>By 🔥•Ember Studios•🔥</h5>
 
       <div id="theme-selector">
@@ -162,9 +163,9 @@ export default function Chatroom() {
         <label>Username:</label>
         <input
           type="text"
+          placeholder="Enter your username"
           value={username}
           onChange={handleUsernameChange}
-          onKeyUp={handleTyping}
         />
       </div>
 
@@ -172,32 +173,20 @@ export default function Chatroom() {
         <label>Profile Picture URL:</label>
         <input
           type="text"
+          placeholder="Enter your profile picture URL"
           value={profilePicture}
           onChange={handleProfilePictureChange}
         />
       </div>
 
-      <div id="messages" className="messages-container">
-        {messages.map((msg, index) => (
-          <div key={index} className="message">
-            <img src={msg.profile_picture} alt={`${msg.username}'s profile`} />
-            <span className="username">{msg.username}</span>
-            <span className="message-text">{msg.message}</span>
-          </div>
-        ))}
+      {/* Typing Indicator */}
+      <div id="typing-indicator">
+        <p>{typingText()}</p>
       </div>
 
-      <div>{typingText()}</div>
-
-      <form onSubmit={sendMessage}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message"
-        />
-        <button type="submit">Send</button>
-      </form>
+      <div id="messages">
+        {/* Display your messages here */}
+      </div>
     </div>
   );
 }
