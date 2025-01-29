@@ -21,9 +21,8 @@ export default function Chatroom() {
 
     const storedUsername = localStorage.getItem('username');
     const storedProfilePicture = localStorage.getItem('profilePicture');
-
     setUsername(storedUsername || '');
-    setProfilePicture(storedProfilePicture || '/default-avatar.png'); // Default PFP
+    setProfilePicture(storedProfilePicture || '');
 
     fetchMessages();
 
@@ -58,7 +57,7 @@ export default function Chatroom() {
       .insert([{ 
         username, 
         message: newMessage, 
-        profile_picture: profilePicture || '/default-avatar.png', // Default PFP if empty
+        profile_picture: profilePicture || '', // Allow empty profile picture
         timestamp 
       }]);
     setNewMessage('');
@@ -72,14 +71,8 @@ export default function Chatroom() {
 
   const handleProfilePictureChange = (e) => {
     const value = e.target.value;
-    setProfilePicture(value || '/default-avatar.png'); // Ensure default PFP
+    setProfilePicture(value);
     localStorage.setItem('profilePicture', value);
-  };
-
-  const changeTheme = (newTheme) => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.body.setAttribute('data-theme', newTheme);
   };
 
   if (loading) {
@@ -103,7 +96,7 @@ export default function Chatroom() {
         <select
           id="theme-dropdown"
           value={theme}
-          onChange={(e) => changeTheme(e.target.value)}
+          onChange={(e) => setTheme(e.target.value)}
         >
           <option value="default">Default</option>
           <option value="sunset">Sunset</option>
@@ -130,7 +123,7 @@ export default function Chatroom() {
         <label>Profile Picture URL:</label>
         <input
           type="text"
-          placeholder="Enter your profile picture URL"
+          placeholder="Enter your profile picture URL (optional)"
           value={profilePicture}
           onChange={handleProfilePictureChange}
         />
@@ -140,7 +133,7 @@ export default function Chatroom() {
         {messages.map((msg) => (
           <div key={msg.id} className="message">
             <img
-              src={msg.profile_picture || '/default-avatar.png'} // Default PFP if missing
+              src={msg.profile_picture || '/default-avatar.png'} // Use default avatar if missing
               alt="PFP"
               className="pfp"
             />
