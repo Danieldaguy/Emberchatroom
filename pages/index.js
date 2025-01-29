@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'; 
+import { useEffect, useState, useRef } from 'react'; 
 import { supabase } from '../lib/supabaseClient';
 
 export default function Chatroom() { 
@@ -162,58 +162,42 @@ export default function Chatroom() {
         <label>Username:</label>
         <input
           type="text"
-          placeholder="Enter your username"
           value={username}
           onChange={handleUsernameChange}
+          onKeyUp={handleTyping}
         />
-      </div> 
+      </div>
 
       <div id="profile-picture-container">
         <label>Profile Picture URL:</label>
         <input
           type="text"
-          placeholder="Enter your profile picture URL"
           value={profilePicture}
           onChange={handleProfilePictureChange}
         />
       </div>
 
-      {/* Typing Indicator */}
-      <div id="typing-indicator">
-        <p>{typingText()}</p>
-      </div>
-
-      <div id="messages">
-        {messages.map((msg) => (
-          <div key={msg.id} className="message">
-            <img
-              src={msg.profile_picture || '/default-avatar.png'}
-              alt="PFP"
-              className="pfp"
-            />
-            <div>
-              <strong className="username">{msg.username}</strong>
-              <span className="timestamp">
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </span>
-              <p>{msg.message}</p>
-            </div>
+      <div id="messages" className="messages-container">
+        {messages.map((msg, index) => (
+          <div key={index} className="message">
+            <img src={msg.profile_picture} alt={`${msg.username}'s profile`} />
+            <span className="username">{msg.username}</span>
+            <span className="message-text">{msg.message}</span>
           </div>
         ))}
       </div>
 
-      <form id="send-form" onSubmit={sendMessage}>
+      <div>{typingText()}</div>
+
+      <form onSubmit={sendMessage}>
         <input
           type="text"
-          placeholder="Type your message..."
           value={newMessage}
-          onChange={(e) => {
-            setNewMessage(e.target.value);
-            handleTyping();
-          }}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message"
         />
         <button type="submit">Send</button>
-      </form> 
-    </div> 
-  ); 
+      </form>
+    </div>
+  );
 }
