@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'; // Import useRef here
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Chatroom() {
@@ -8,38 +8,39 @@ export default function Chatroom() {
   const [profilePicture, setProfilePicture] = useState('');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
-  const [typingUsers, setTypingUsers] = useState(new Set()); // Track users who are typing
-  const typingTimeout = 2000; // Timeout for when to stop showing typing users
-  const typingTimerRef = useRef(null); // To manage the typing timeout
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const typingTimeout = 2000;
+  const typingTimerRef = useRef(null);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 3000);
 
     if (typeof window !== 'undefined') {
-      const storedTheme = localStorage.getItem('theme'); 
-      if (storedTheme) { 
-        console.log('Stored theme:', storedTheme); 
-        setTheme(storedTheme); 
+      const storedTheme = localStorage.getItem('theme');
+      if (storedTheme) {
+        console.log('Stored theme:', storedTheme);
+        setTheme(storedTheme);
         document.body.setAttribute('data-theme', storedTheme);
       }
 
-      const storedUsername = localStorage.getItem('username'); 
-      const storedProfilePicture = localStorage.getItem('profilePicture'); 
-      setUsername(storedUsername || ''); 
+      const storedUsername = localStorage.getItem('username');
+      const storedProfilePicture = localStorage.getItem('profilePicture');
+      setUsername(storedUsername || '');
       setProfilePicture(storedProfilePicture || '');
     }
 
     fetchMessages();
 
     const channel = supabase
-      .channel('realtime:messages') 
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => { 
-        setMessages((prev) => [...prev, payload.new]); 
-      }) 
+      .channel('realtime:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchMessages = async () => {
@@ -55,12 +56,12 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !username.trim()) return;
 
-    const timestamp = new Date().toISOString(); 
-    const pfpToUse = profilePicture.trim() || '/default-avatar.png'; 
+    const timestamp = new Date().toISOString();
+    const pfpToUse = profilePicture.trim() || '/default-avatar.png';
 
     await supabase
       .from('messages')
-      .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]); 
+      .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]);
     setNewMessage('');
     scrollToBottom();
   };
@@ -82,10 +83,8 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    // Add user to typing list
     setTypingUsers(prev => new Set(prev).add(username));
 
-    // Remove user from typing list after timeout
     typingTimerRef.current = setTimeout(() => {
       setTypingUsers(prev => {
         const newSet = new Set(prev);
@@ -102,7 +101,6 @@ export default function Chatroom() {
     }
   };
 
-  // Debugging logs
   console.log('Current theme:', theme);
 
   if (loading) {
@@ -142,8 +140,8 @@ export default function Chatroom() {
             const newTheme = e.target.value;
             setTheme(newTheme);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('theme', newTheme); 
-              document.body.setAttribute('data-theme', newTheme); 
+              localStorage.setItem('theme', newTheme);
+              document.body.setAttribute('data-theme', newTheme);
               console.log('Applied theme:', newTheme);
             }
           }}
@@ -179,14 +177,41 @@ export default function Chatroom() {
         />
       </div>
 
-      {/* Typing Indicator */}
       <div id="typing-indicator">
         <p>{typingText()}</p>
       </div>
 
       <div id="messages">
-        {/* Display your messages here */}
+        {messages.map((msg) => (
+          <div key={msg.id} className="message">
+            <img
+              src={msg.profile_picture || '/default-avatar.png'}
+              alt="PFP"
+              className="pfp"
+            />
+            <div>
+              <strong className="username">{msg.username}</strong>
+              <span className="timestamp">
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </span>
+              <p>{msg.message}</p>
+            </div>
+          </div>
+        ))}
       </div>
+
+      <form id="send-form" onSubmit={sendMessage}>
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={newMessage}
+          onChange={(e) => {
+            setNewMessage(e.target.value);
+            handleTyping();
+          }}
+        />
+        <button type="submit">Send</button>
+      </form>
     </div>
   );
 }
