@@ -8,18 +8,19 @@ export default function Chatroom() {
   const [profilePicture, setProfilePicture] = useState(''); 
   const [theme, setTheme] = useState('default'); 
   const [loading, setLoading] = useState(true);
+  const [typingUsers, setTypingUsers] = useState(new Set()); // Track users who are typing
+  const typingTimeout = 2000; // Timeout for when to stop showing typing users
+  const typingTimerRef = useRef(null); // To manage the typing timeout
 
   useEffect(() => { 
-    // Simulate loading screen 
     setTimeout(() => setLoading(false), 3000);
 
-    // Check if we are in the browser
     if (typeof window !== 'undefined') {
       const storedTheme = localStorage.getItem('theme'); 
       if (storedTheme) { 
-        console.log('Stored theme:', storedTheme);  // Debugging theme retrieval
+        console.log('Stored theme:', storedTheme); 
         setTheme(storedTheme); 
-        document.body.setAttribute('data-theme', storedTheme);  // Apply theme to body
+        document.body.setAttribute('data-theme', storedTheme);
       }
 
       const storedUsername = localStorage.getItem('username'); 
@@ -38,7 +39,6 @@ export default function Chatroom() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-
   }, []);
 
   const fetchMessages = async () => { 
@@ -55,12 +55,13 @@ export default function Chatroom() {
     if (!newMessage.trim() || !username.trim()) return;
 
     const timestamp = new Date().toISOString(); 
-    const pfpToUse = profilePicture.trim() || '/default-avatar.png'; // Use default PFP if none provided
+    const pfpToUse = profilePicture.trim() || '/default-avatar.png'; 
 
     await supabase
       .from('messages')
       .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]); 
     setNewMessage('');
+    scrollToBottom();
   };
 
   const handleUsernameChange = (e) => { 
@@ -73,6 +74,31 @@ export default function Chatroom() {
 
   const handleProfilePictureChange = (e) => { 
     setProfilePicture(e.target.value); 
+  };
+
+  const handleTyping = () => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+
+    // Add user to typing list
+    setTypingUsers(prev => new Set(prev).add(username));
+
+    // Remove user from typing list after timeout
+    typingTimerRef.current = setTimeout(() => {
+      setTypingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(username);
+        return newSet;
+      });
+    }, typingTimeout);
+  };
+
+  const scrollToBottom = () => {
+    const messagesContainer = document.getElementById('messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   };
 
   // Debugging logs
@@ -89,6 +115,18 @@ export default function Chatroom() {
     ); 
   }
 
+  const typingText = () => {
+    const typingArray = Array.from(typingUsers);
+    if (typingArray.length === 1) {
+      return `${typingArray[0]} is typing...`;
+    } else if (typingArray.length === 2) {
+      return `${typingArray.join(' and ')} are typing...`;
+    } else if (typingArray.length > 2) {
+      return 'Multiple people are typing...';
+    }
+    return '';
+  };
+
   return ( 
     <div id="chat-container"> 
       <h1>🔥•LitChat V1•🔥</h1> 
@@ -104,8 +142,8 @@ export default function Chatroom() {
             setTheme(newTheme);
             if (typeof window !== 'undefined') {
               localStorage.setItem('theme', newTheme); 
-              document.body.setAttribute('data-theme', newTheme);  // Update the body with the new theme
-              console.log('Applied theme:', newTheme);  // Debugging theme change
+              document.body.setAttribute('data-theme', newTheme); 
+              console.log('Applied theme:', newTheme);
             }
           }}
         >
@@ -140,6 +178,11 @@ export default function Chatroom() {
         />
       </div>
 
+      {/* Typing Indicator */}
+      <div id="typing-indicator">
+        <p>{typingText()}</p>
+      </div>
+
       <div id="messages">
         {messages.map((msg) => (
           <div key={msg.id} className="message">
@@ -164,7 +207,10 @@ export default function Chatroom() {
           type="text"
           placeholder="Type your message..."
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={(e) => {
+            setNewMessage(e.target.value);
+            handleTyping();
+          }}
         />
         <button type="submit">Send</button>
       </form> 
