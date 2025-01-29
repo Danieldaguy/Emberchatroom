@@ -17,8 +17,9 @@ export default function Chatroom() {
     if (typeof window !== 'undefined') {
       const storedTheme = localStorage.getItem('theme'); 
       if (storedTheme) { 
+        console.log('Stored theme:', storedTheme);  // Debugging theme retrieval
         setTheme(storedTheme); 
-        document.body.setAttribute('data-theme', storedTheme); 
+        document.body.setAttribute('data-theme', storedTheme);  // Apply theme to body
       }
 
       const storedUsername = localStorage.getItem('username'); 
@@ -74,6 +75,9 @@ export default function Chatroom() {
     setProfilePicture(e.target.value); 
   };
 
+  // Debugging logs
+  console.log('Current theme:', theme);
+
   if (loading) { 
     return ( 
       <div id="loading-screen"> 
@@ -96,9 +100,12 @@ export default function Chatroom() {
           id="theme-dropdown"
           value={theme}
           onChange={(e) => {
-            setTheme(e.target.value);
+            const newTheme = e.target.value;
+            setTheme(newTheme);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('theme', e.target.value);
+              localStorage.setItem('theme', newTheme); 
+              document.body.setAttribute('data-theme', newTheme);  // Update the body with the new theme
+              console.log('Applied theme:', newTheme);  // Debugging theme change
             }
           }}
         >
