@@ -52,14 +52,11 @@ export default function Chatroom() {
     if (!newMessage.trim() || !username.trim()) return;
 
     const timestamp = new Date().toISOString();
+    const pfpToUse = profilePicture.trim() || '/default-avatar.png'; // Use default PFP if none provided
+
     await supabase
       .from('messages')
-      .insert([{ 
-        username, 
-        message: newMessage, 
-        profile_picture: profilePicture || '', // Allow empty profile picture
-        timestamp 
-      }]);
+      .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]);
     setNewMessage('');
   };
 
@@ -70,9 +67,7 @@ export default function Chatroom() {
   };
 
   const handleProfilePictureChange = (e) => {
-    const value = e.target.value;
-    setProfilePicture(value);
-    localStorage.setItem('profilePicture', value);
+    setProfilePicture(e.target.value);
   };
 
   if (loading) {
@@ -123,7 +118,7 @@ export default function Chatroom() {
         <label>Profile Picture URL:</label>
         <input
           type="text"
-          placeholder="Enter your profile picture URL (optional)"
+          placeholder="Enter your profile picture URL"
           value={profilePicture}
           onChange={handleProfilePictureChange}
         />
@@ -133,7 +128,7 @@ export default function Chatroom() {
         {messages.map((msg) => (
           <div key={msg.id} className="message">
             <img
-              src={msg.profile_picture || '/default-avatar.png'} // Use default avatar if missing
+              src={msg.profile_picture || '/default-avatar.png'}
               alt="PFP"
               className="pfp"
             />
