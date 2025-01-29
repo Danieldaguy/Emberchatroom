@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
- 
+
 export default function Chatroom() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -21,8 +21,9 @@ export default function Chatroom() {
 
     const storedUsername = localStorage.getItem('username');
     const storedProfilePicture = localStorage.getItem('profilePicture');
+
     setUsername(storedUsername || '');
-    setProfilePicture(storedProfilePicture || '');
+    setProfilePicture(storedProfilePicture || '/default-avatar.png'); // Default PFP
 
     fetchMessages();
 
@@ -33,12 +34,8 @@ export default function Chatroom() {
       })
       .subscribe();
 
-    // Add particle effects for themes with particles
-    addParticles(storedTheme || 'default');
-
     return () => {
       supabase.removeChannel(channel);
-      removeParticles();
     };
   }, []);
 
@@ -53,12 +50,17 @@ export default function Chatroom() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !username.trim() || !profilePicture.trim()) return;
+    if (!newMessage.trim() || !username.trim()) return;
 
     const timestamp = new Date().toISOString();
     await supabase
       .from('messages')
-      .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
+      .insert([{ 
+        username, 
+        message: newMessage, 
+        profile_picture: profilePicture || '/default-avatar.png', // Default PFP if empty
+        timestamp 
+      }]);
     setNewMessage('');
   };
 
@@ -70,7 +72,7 @@ export default function Chatroom() {
 
   const handleProfilePictureChange = (e) => {
     const value = e.target.value;
-    setProfilePicture(value);
+    setProfilePicture(value || '/default-avatar.png'); // Ensure default PFP
     localStorage.setItem('profilePicture', value);
   };
 
@@ -78,50 +80,6 @@ export default function Chatroom() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.body.setAttribute('data-theme', newTheme);
-    removeParticles();
-    addParticles(newTheme);
-  };
-
-  const addParticles = (theme) => {
-    const container = document.createElement('div');
-    container.id = 'particle-container';
-    document.body.appendChild(container);
-
-    const particleCount = theme === 'void' || theme === 'fire' || theme === 'blue-fire' || theme === 'acid' ? 50 : 0;
-
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      particle.className = `particle ${theme}-particle`;
-      particle.style.left = `${Math.random() * 100}vw`;
-      particle.style.animationDelay = `${Math.random() * 5}s`;
-      container.appendChild(particle);
-    }
-
-    // Initialize particles.js with settings based on theme
-    if (theme === 'fire' || theme === 'blue-fire' || theme === 'acid') {
-      window.particlesJS('particle-container', {
-        particles: {
-          number: {
-            value: 100,
-          },
-          size: {
-            value: 3,
-          },
-          move: {
-            speed: 1,
-            direction: 'top',
-          },
-          color: {
-            value: theme === 'fire' ? '#ff6347' : theme === 'blue-fire' ? '#66ccff' : '#66ff33',
-          },
-        },
-      });
-    }
-  };
-
-  const removeParticles = () => {
-    const container = document.getElementById('particle-container');
-    if (container) container.remove();
   };
 
   if (loading) {
@@ -182,7 +140,7 @@ export default function Chatroom() {
         {messages.map((msg) => (
           <div key={msg.id} className="message">
             <img
-              src={msg.profile_picture || '/default-avatar.png'}
+              src={msg.profile_picture || '/default-avatar.png'} // Default PFP if missing
               alt="PFP"
               className="pfp"
             />
