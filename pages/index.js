@@ -33,9 +33,9 @@ export default function Chatroom() {
     
     if (session) {
       setUser(session.user);
-    } else {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   const signInWithDiscord = async () => {
@@ -43,10 +43,7 @@ export default function Chatroom() {
       provider: 'discord',
     });
 
-    if (error) {
-      console.error('Login error:', error.message);
-      alert(`Error logging in with Discord: ${error.message}`);
-    }
+    if (error) console.error('Login error:', error.message);
   };
 
   const signInWithEmail = async (email) => {
@@ -54,7 +51,6 @@ export default function Chatroom() {
 
     if (error) {
       console.error('Email login error:', error.message);
-      alert(`Error logging in: ${error.message}`);
     } else {
       alert('Check your email for the login link!');
     }
@@ -71,11 +67,7 @@ export default function Chatroom() {
       .select('*')
       .order('timestamp', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching messages:', error.message);
-    } else {
-      setMessages(data || []);
-    }
+    if (!error) setMessages(data || []);
   };
 
   const sendMessage = async (e) => {
@@ -86,16 +78,11 @@ export default function Chatroom() {
     const username = user.user_metadata?.full_name || user.email.split('@')[0];
     const profilePicture = user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
-    const { error } = await supabase
+    await supabase
       .from('messages')
       .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
-
-    if (error) {
-      console.error('Error sending message:', error.message);
-    } else {
-      setNewMessage('');
-      scrollToBottom();
-    }
+    setNewMessage('');
+    scrollToBottom();
   };
 
   const handleTyping = () => {
@@ -103,10 +90,10 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers((prev) => new Set(prev).add(user?.email));
+    setTypingUsers(prev => new Set(prev).add(user?.email));
 
     typingTimerRef.current = setTimeout(() => {
-      setTypingUsers((prev) => {
+      setTypingUsers(prev => {
         const newSet = new Set(prev);
         newSet.delete(user?.email);
         return newSet;
@@ -138,11 +125,16 @@ export default function Chatroom() {
         <h1>🔥•LitChat V1•🔥</h1>
         <h5>By 🔥•Ember Studios•🔥</h5>
         <button onClick={signInWithDiscord}>Login with Discord</button>
-        <input
-          type="email"
-          placeholder="Enter email for login"
-          onKeyDown={(e) => e.key === 'Enter' && signInWithEmail(e.target.value)}
-        />
+        
+        <div>
+          <input
+            type="email"
+            id="email-login-input"
+            placeholder="Enter email for login"
+            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail(e.target.value)}
+          />
+          <button onClick={() => signInWithEmail(document.getElementById('email-login-input').value)}>Submit</button>
+        </div>
       </div>
     );
   }
