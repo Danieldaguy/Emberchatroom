@@ -12,7 +12,6 @@ export default function Chatroom() {
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
-  // Check user session on mount
   useEffect(() => {
     checkAuth();
     fetchMessages();
@@ -37,21 +36,12 @@ export default function Chatroom() {
     setLoading(false);
   };
 
-  const signInWithDiscord = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-    });
-
-    if (error) console.error('Login error:', error.message);
-  };
-
   const signInWithEmail = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false,
       },
-      type: 'email', // Ensure the request is for OTP
     });
 
     if (error) {
@@ -150,8 +140,6 @@ export default function Chatroom() {
       <div id="auth-container">
         <h1>🔥•LitChat V1•🔥</h1>
         <h5>By 🔥•Ember Studios•🔥</h5>
-        <button onClick={signInWithDiscord}>Login with Discord</button>
-
         <div>
           <input
             type="email"
