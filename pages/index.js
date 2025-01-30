@@ -40,10 +40,7 @@ export default function Chatroom() {
   };
 
   const signInWithDiscord = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-    });
-
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });
     if (error) setError(error.message);
   };
 
@@ -218,14 +215,14 @@ export default function Chatroom() {
       </div>
 
       <div id="typing-indicator">
-        <p>{typingUsers.size} users typing...</p> {/* Display the number of users typing */}
+        <p>{typingUsers.size} users typing...</p>
       </div>
 
       <div id="messages">
         {messages.map((message, index) => (
-          <div key={index}>
-            <img src={message.profile_picture} alt="profile" />
-            <strong>{message.username}</strong>: {message.message}
+          <div className="message" key={index}>
+            <img className="pfp" src={message.profile_picture} alt="profile" />
+            <strong className="username">{message.username}</strong>: {message.message}
           </div>
         ))}
       </div>
