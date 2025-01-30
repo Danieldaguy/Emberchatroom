@@ -51,6 +51,7 @@ export default function Chatroom() {
       options: {
         shouldCreateUser: false,
       },
+      type: 'email', // Ensure the request is for OTP
     });
 
     if (error) {
