@@ -30,11 +30,9 @@ export default function Chatroom() {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (session) {
       setUser(session.user);
     }
-
     setLoading(false);
   };
 
@@ -48,7 +46,6 @@ export default function Chatroom() {
 
   const signInWithEmail = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({ email });
-
     if (error) {
       console.error('Email login error:', error.message);
     } else {
@@ -125,7 +122,7 @@ export default function Chatroom() {
         <h1>🔥•LitChat V1•🔥</h1>
         <h5>By 🔥•Ember Studios•🔥</h5>
         <button onClick={signInWithDiscord}>Login with Discord</button>
-        
+
         <div>
           <input
             type="email"
