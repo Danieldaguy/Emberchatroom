@@ -7,12 +7,13 @@ export default function Chatroom() {
   const [newMessage, setNewMessage] = useState('');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
-  const [typingUsers, setTypingUsers] = useState(new Set());
   const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState('');
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
-  // Check user session on mount
   useEffect(() => {
     checkAuth();
     fetchMessages();
@@ -42,42 +43,46 @@ export default function Chatroom() {
       provider: 'discord',
     });
 
-    if (error) console.error('Login error:', error.message);
+    if (error) setError(error.message);
   };
 
-  const signInWithEmail = async (email) => {
+  const signInWithEmail = async () => {
+    if (!email) {
+      setError('Please enter a valid email.');
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: false,
-      },
-      type: 'email', // Ensure the request is for OTP
+      options: { shouldCreateUser: false },
     });
 
     if (error) {
-      console.error('Email login error:', error.message);
+      setError('Error sending OTP. Please try again.');
     } else {
+      setOtpSent(true);
+      setError('');
       alert('Check your email for the OTP!');
     }
   };
 
   const verifyOtp = async () => {
-    if (!otp || !user?.email) {
-      console.error('OTP or user email is missing.');
+    if (!otp || !email) {
+      setError('Please enter the OTP sent to your email.');
       return;
     }
 
     const { data, error } = await supabase.auth.verifyOtp({
-      email: user?.email, // assuming the user email is available here
-      token: otp, // OTP entered by the user
-      type: 'email', // Specify it's for email verification
+      email,
+      token: otp,
+      type: 'email',
     });
 
     if (error) {
-      console.error('OTP verification error:', error.message);
-      alert('Invalid OTP, please try again!');
+      setError('Invalid OTP, please try again!');
     } else {
-      setUser(data.user); // Update the user state with the logged-in user
+      setUser(data.user);
+      setError('');
       alert('Login successful!');
     }
   };
@@ -116,14 +121,8 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers(prev => new Set(prev).add(user?.email));
-
     typingTimerRef.current = setTimeout(() => {
-      setTypingUsers(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(user?.email);
-        return newSet;
-      });
+      setTypingUsers((prev) => new Set(prev).delete(user?.email));
     }, typingTimeout);
   };
 
@@ -156,13 +155,15 @@ export default function Chatroom() {
           <input
             type="email"
             id="email-login-input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter email for login"
-            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
           />
-          <button onClick={() => signInWithEmail(document.getElementById('email-login-input').value)}>Submit</button>
+          <button onClick={signInWithEmail}>Submit</button>
         </div>
 
-        {otp && (
+        {otpSent && (
           <div>
             <input
               type="text"
@@ -173,6 +174,8 @@ export default function Chatroom() {
             <button onClick={verifyOtp}>Verify OTP</button>
           </div>
         )}
+
+        {error && <p className="error-message">{error}</p>}
       </div>
     );
   }
