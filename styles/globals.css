@@ -301,3 +301,35 @@ select:focus {
 ::-webkit-scrollbar-track {
   background: var(--container-bg);
 }
+
+/* Email Input and Button Updates */
+#email-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 1em;
+  border: 1px solid var(--input-bg);
+  background: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#email-input:focus {
+  border-color: var(--accent-color);
+}
+
+#email-submit {
+  padding: 12px 20px;
+  font-size: 1em;
+  border: none;
+  background-color: var(--accent-color);
+  color: var(--bg-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#email-submit:hover {
+  background-color: #d57d26; /* A slightly darker shade */
+}
