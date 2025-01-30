@@ -14,7 +14,7 @@ export default function Chatroom() {
 
   // Check user session on mount
   useEffect(() => {
-    console.log('useEffect triggered');
+    console.log('useEffect triggered: checking auth and fetching messages');
     checkAuth();
     fetchMessages();
 
@@ -33,96 +33,121 @@ export default function Chatroom() {
   }, []);
 
   const checkAuth = async () => {
-    console.log('Checking authentication...');
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error('Error getting session:', error.message);
-      setLoading(false);
-      return;
-    }
+    try {
+      console.log('Checking authentication...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error.message);
+        setLoading(false);
+        return;
+      }
 
-    if (session) {
-      console.log('User session found:', session);
-      setUser(session.user);
-    } else {
-      console.log('No session found');
+      if (session) {
+        console.log('User session found:', session);
+        setUser(session.user);
+      } else {
+        console.log('No session found');
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error during checkAuth:', err.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const signInWithDiscord = async () => {
-    console.log('Attempting Discord login...');
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-    });
+    try {
+      console.log('Attempting Discord login...');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+      });
 
-    if (error) {
-      console.error('Login error:', error.message);
-    } else {
-      console.log('Discord login successful');
+      if (error) {
+        console.error('Discord login error:', error.message);
+      } else {
+        console.log('Discord login successful');
+      }
+    } catch (err) {
+      console.error('Error during Discord login:', err.message);
     }
   };
 
   const signInWithEmail = async (email) => {
-    console.log('Attempting email login with:', email);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-      },
-      type: 'email', // Ensure the request is for OTP
-    });
+    try {
+      console.log('Attempting email login with:', email);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+        },
+        type: 'email', // Ensure the request is for OTP
+      });
 
-    if (error) {
-      console.error('Email login error:', error.message);
-    } else {
-      console.log('OTP sent to email:', email);
-      alert('Check your email for the OTP!');
+      if (error) {
+        console.error('Email login error:', error.message);
+      } else {
+        console.log('OTP sent to email:', email);
+        alert('Check your email for the OTP!');
+      }
+    } catch (err) {
+      console.error('Error during email sign-in:', err.message);
     }
   };
 
   const verifyOtp = async () => {
-    console.log('Verifying OTP:', otp);
-    if (!otp || !user?.email) {
-      console.error('OTP or user email is missing.');
-      return;
-    }
+    try {
+      console.log('Verifying OTP:', otp);
+      if (!otp || !user?.email) {
+        console.error('OTP or user email is missing.');
+        return;
+      }
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: user?.email, // assuming the user email is available here
-      token: otp, // OTP entered by the user
-      type: 'email', // Specify it's for email verification
-    });
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: user?.email, // assuming the user email is available here
+        token: otp, // OTP entered by the user
+        type: 'email', // Specify it's for email verification
+      });
 
-    if (error) {
-      console.error('OTP verification error:', error.message);
-      alert('Invalid OTP, please try again!');
-    } else {
-      console.log('OTP verification successful:', data);
-      setUser(data.user); // Update the user state with the logged-in user
-      alert('Login successful!');
+      if (error) {
+        console.error('OTP verification error:', error.message);
+        alert('Invalid OTP, please try again!');
+      } else {
+        console.log('OTP verification successful:', data);
+        setUser(data.user); // Update the user state with the logged-in user
+        alert('Login successful!');
+      }
+    } catch (err) {
+      console.error('Error during OTP verification:', err.message);
     }
   };
 
   const signOut = async () => {
-    console.log('Signing out...');
-    await supabase.auth.signOut();
-    setUser(null);
-    console.log('User signed out');
+    try {
+      console.log('Signing out...');
+      await supabase.auth.signOut();
+      setUser(null);
+      console.log('User signed out');
+    } catch (err) {
+      console.error('Error during sign out:', err.message);
+    }
   };
 
   const fetchMessages = async () => {
-    console.log('Fetching messages...');
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('timestamp', { ascending: true });
+    try {
+      console.log('Fetching messages...');
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('timestamp', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching messages:', error.message);
-    } else {
-      console.log('Fetched messages:', data);
-      setMessages(data || []);
+      if (error) {
+        console.error('Error fetching messages:', error.message);
+      } else {
+        console.log('Fetched messages:', data);
+        setMessages(data || []);
+      }
+    } catch (err) {
+      console.error('Error during message fetching:', err.message);
     }
   };
 
@@ -138,16 +163,20 @@ export default function Chatroom() {
     const username = user.user_metadata?.full_name || user.email.split('@')[0];
     const profilePicture = user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
-    const { error } = await supabase
-      .from('messages')
-      .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
 
-    if (error) {
-      console.error('Error sending message:', error.message);
-    } else {
-      console.log('Message sent successfully');
-      setNewMessage('');
-      scrollToBottom();
+      if (error) {
+        console.error('Error sending message:', error.message);
+      } else {
+        console.log('Message sent successfully');
+        setNewMessage('');
+        scrollToBottom();
+      }
+    } catch (err) {
+      console.error('Error during message sending:', err.message);
     }
   };
 
