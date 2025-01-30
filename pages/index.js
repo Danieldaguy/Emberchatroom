@@ -8,6 +8,7 @@ export default function Chatroom() {
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [otp, setOtp] = useState('');
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
@@ -45,11 +46,33 @@ export default function Chatroom() {
   };
 
   const signInWithEmail = async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+      },
+    });
+
     if (error) {
       console.error('Email login error:', error.message);
     } else {
-      alert('Check your email for the login link!');
+      alert('Check your email for the OTP!');
+    }
+  };
+
+  const verifyOtp = async () => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: user?.email, // assuming the user email is available here
+      token: otp, // OTP entered by the user
+      type: 'email', // Specify it's for email verification
+    });
+
+    if (error) {
+      console.error('OTP verification error:', error.message);
+      alert('Invalid OTP, please try again!');
+    } else {
+      setUser(data.user);
+      alert('Login successful!');
     }
   };
 
@@ -132,6 +155,18 @@ export default function Chatroom() {
           />
           <button onClick={() => signInWithEmail(document.getElementById('email-login-input').value)}>Submit</button>
         </div>
+
+        {otp && (
+          <div>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
+            />
+            <button onClick={verifyOtp}>Verify OTP</button>
+          </div>
+        )}
       </div>
     );
   }
@@ -167,33 +202,25 @@ export default function Chatroom() {
       </div>
 
       <div id="typing-indicator">
-        <p>{typingUsers.size > 0 && 'Someone is typing...'}</p>
+        <p>{typingUsers.size} users typing...</p>
       </div>
 
       <div id="messages">
-        {messages.map((msg) => (
-          <div key={msg.id} className="message">
-            <img src={msg.profile_picture} alt="PFP" className="pfp" />
-            <div>
-              <strong className="username">{msg.username}</strong>
-              <span className="timestamp">
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </span>
-              <p>{msg.message}</p>
-            </div>
+        {messages.map((message, index) => (
+          <div key={index}>
+            <img src={message.profile_picture} alt="profile" />
+            <strong>{message.username}</strong>: {message.message}
           </div>
         ))}
       </div>
 
-      <form id="send-form" onSubmit={sendMessage}>
+      <form onSubmit={sendMessage}>
         <input
           type="text"
-          placeholder="Type your message..."
           value={newMessage}
-          onChange={(e) => {
-            setNewMessage(e.target.value);
-            handleTyping();
-          }}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          onKeyDown={handleTyping}
         />
         <button type="submit">Send</button>
       </form>
