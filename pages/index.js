@@ -11,6 +11,7 @@ export default function Chatroom() {
   const [email, setEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
+  const [typingUsers, setTypingUsers] = useState(new Set()); // Define typingUsers state
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
@@ -121,8 +122,14 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
+    setTypingUsers((prev) => new Set(prev).add(user?.email)); // Add the user to typingUsers
+
     typingTimerRef.current = setTimeout(() => {
-      setTypingUsers((prev) => new Set(prev).delete(user?.email));
+      setTypingUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(user?.email); // Remove the user after timeout
+        return newSet;
+      });
     }, typingTimeout);
   };
 
@@ -211,7 +218,7 @@ export default function Chatroom() {
       </div>
 
       <div id="typing-indicator">
-        <p>{typingUsers.size} users typing...</p>
+        <p>{typingUsers.size} users typing...</p> {/* Display the number of users typing */}
       </div>
 
       <div id="messages">
