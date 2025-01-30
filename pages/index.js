@@ -5,7 +5,7 @@ export default function Chatroom() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [username, setUsername] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
+  const [profilePicture, setProfilePicture] = useState('https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState(new Set());
@@ -26,7 +26,7 @@ export default function Chatroom() {
       const storedUsername = localStorage.getItem('username');
       const storedProfilePicture = localStorage.getItem('profilePicture');
       setUsername(storedUsername || '');
-      setProfilePicture(storedProfilePicture || '');
+      setProfilePicture(storedProfilePicture || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117');
     }
 
     fetchMessages();
@@ -57,7 +57,7 @@ export default function Chatroom() {
     if (!newMessage.trim() || !username.trim()) return;
 
     const timestamp = new Date().toISOString();
-    const pfpToUse = profilePicture.trim() || '/default-avatar.png';
+    const pfpToUse = profilePicture.trim() || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
     await supabase
       .from('messages')
@@ -185,7 +185,7 @@ export default function Chatroom() {
         {messages.map((msg) => (
           <div key={msg.id} className="message">
             <img
-              src={msg.profile_picture || '/default-avatar.png'}
+              src={msg.profile_picture || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117'}
               alt="PFP"
               className="pfp"
             />
