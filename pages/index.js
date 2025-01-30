@@ -46,38 +46,26 @@ export default function Chatroom() {
     if (error) setError(error.message);
   };
 
-  const signInWithEmail = async (email) => {
-  try {
-    // Attempt to send OTP to the email
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false, // Adjust according to your needs
-      },
-      type: 'email',
-    });
-
-    // If there's an error during OTP sending, log it and display an alert
-    if (error) {
-      console.error('Error sending OTP:', error.message); // Log the specific error message
-      alert(`Error: ${error.message}`); // Show user-friendly alert
+  const signInWithEmail = async () => {
+    if (!email) {
+      setError('Please enter a valid email.');
       return;
     }
 
-    // If OTP is sent successfully, inform the user
-    console.log('OTP sent to:', email); // Log for debugging
-    alert('Check your email for the OTP!');
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
 
-  } catch (err) {
-    // Log any unexpected errors that might occur during the process
-    console.error('Unexpected error:', err);
-    alert('Something went wrong. Please try again later.');
-  }
-};
+    if (error) {
+      setError('Error sending OTP. Please try again.');
+    } else {
+      setOtpSent(true);
+      setError('');
+      alert('Check your email for the OTP!');
+    }
+  };
 
-// Example usage: Pass the user's email to this function
-const emailInput = 'user@example.com';  // Replace with the actual email input
-signInWithEmail(emailInput);
   const verifyOtp = async () => {
     if (!otp || !email) {
       setError('Please enter the OTP sent to your email.');
