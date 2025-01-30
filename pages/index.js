@@ -102,18 +102,29 @@ export default function Chatroom() {
     }
   };
 
-  console.log('Current theme:', theme);
+  const deleteMessage = async (messageId) => {
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
 
-  if (loading) {
-    return (
-      <div id="loading-screen">
-        <h1>🔥 Loading LitChat... 🔥</h1>
-        <div id="loading-bar">
-          <span></span>
-        </div>
-      </div>
-    );
-  }
+    if (!error) {
+      setMessages((prev) => prev.filter(msg => msg.id !== messageId));
+    }
+  };
+
+  const editMessage = async (messageId, newContent) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({ message: newContent })
+      .eq('id', messageId);
+
+    if (!error) {
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === messageId ? { ...msg, message: newContent } : msg))
+      );
+    }
+  };
 
   const typingText = () => {
     const typingArray = Array.from(typingUsers);
@@ -126,6 +137,17 @@ export default function Chatroom() {
     }
     return '';
   };
+
+  if (loading) {
+    return (
+      <div id="loading-screen">
+        <h1>🔥 Loading LitChat... 🔥</h1>
+        <div id="loading-bar">
+          <span></span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="chat-container">
@@ -196,6 +218,19 @@ export default function Chatroom() {
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </span>
               <p>{msg.message}</p>
+
+              {/* Edit and Delete buttons only for user's own messages */}
+              {msg.username === username && (
+                <div className="message-actions">
+                  <button onClick={() => deleteMessage(msg.id)}>Delete</button>
+                  <button onClick={() => {
+                    const newMessage = prompt("Edit your message:", msg.message);
+                    if (newMessage !== null) {
+                      editMessage(msg.id, newMessage);
+                    }
+                  }}>Edit</button>
+                </div>
+              )}
             </div>
           </div>
         ))}
