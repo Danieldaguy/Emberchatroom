@@ -61,6 +61,11 @@ export default function Chatroom() {
   };
 
   const verifyOtp = async () => {
+    if (!otp || !user?.email) {
+      console.error('OTP or user email is missing.');
+      return;
+    }
+
     const { data, error } = await supabase.auth.verifyOtp({
       email: user?.email, // assuming the user email is available here
       token: otp, // OTP entered by the user
@@ -71,7 +76,7 @@ export default function Chatroom() {
       console.error('OTP verification error:', error.message);
       alert('Invalid OTP, please try again!');
     } else {
-      setUser(data.user);
+      setUser(data.user); // Update the user state with the logged-in user
       alert('Login successful!');
     }
   };
