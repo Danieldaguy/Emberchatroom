@@ -7,198 +7,126 @@ export default function Chatroom() {
   const [newMessage, setNewMessage] = useState('');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
-  const [typingUsers, setTypingUsers] = useState(new Set());
   const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState('');
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
-  // Check user session on mount
   useEffect(() => {
-    console.log('useEffect triggered: checking auth and fetching messages');
     checkAuth();
     fetchMessages();
 
     const channel = supabase
       .channel('realtime:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        console.log('New message received:', payload);
         setMessages((prev) => [...prev, payload.new]);
       })
       .subscribe();
 
     return () => {
-      console.log('Cleaning up channel');
       supabase.removeChannel(channel);
     };
   }, []);
 
   const checkAuth = async () => {
-    try {
-      console.log('Checking authentication...');
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Error getting session:', error.message);
-        setLoading(false);
-        return;
-      }
-
-      if (session) {
-        console.log('User session found:', session);
-        setUser(session.user);
-      } else {
-        console.log('No session found');
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error('Error during checkAuth:', err.message);
-      setLoading(false);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setUser(session.user);
     }
+    setLoading(false);
   };
 
   const signInWithDiscord = async () => {
-    try {
-      console.log('Attempting Discord login...');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-      });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+    });
 
-      if (error) {
-        console.error('Discord login error:', error.message);
-      } else {
-        console.log('Discord login successful');
-      }
-    } catch (err) {
-      console.error('Error during Discord login:', err.message);
-    }
+    if (error) setError(error.message);
   };
 
-  const signInWithEmail = async (email) => {
-    try {
-      console.log('Attempting email login with:', email);
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        },
-        type: 'email', // Ensure the request is for OTP
-      });
+  const signInWithEmail = async () => {
+    if (!email) {
+      setError('Please enter a valid email.');
+      return;
+    }
 
-      if (error) {
-        console.error('Email login error:', error.message);
-      } else {
-        console.log('OTP sent to email:', email);
-        alert('Check your email for the OTP!');
-      }
-    } catch (err) {
-      console.error('Error during email sign-in:', err.message);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+
+    if (error) {
+      setError('Error sending OTP. Please try again.');
+    } else {
+      setOtpSent(true);
+      setError('');
+      alert('Check your email for the OTP!');
     }
   };
 
   const verifyOtp = async () => {
-    try {
-      console.log('Verifying OTP:', otp);
-      if (!otp || !user?.email) {
-        console.error('OTP or user email is missing.');
-        return;
-      }
+    if (!otp || !email) {
+      setError('Please enter the OTP sent to your email.');
+      return;
+    }
 
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: user?.email, // assuming the user email is available here
-        token: otp, // OTP entered by the user
-        type: 'email', // Specify it's for email verification
-      });
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    });
 
-      if (error) {
-        console.error('OTP verification error:', error.message);
-        alert('Invalid OTP, please try again!');
-      } else {
-        console.log('OTP verification successful:', data);
-        setUser(data.user); // Update the user state with the logged-in user
-        alert('Login successful!');
-      }
-    } catch (err) {
-      console.error('Error during OTP verification:', err.message);
+    if (error) {
+      setError('Invalid OTP, please try again!');
+    } else {
+      setUser(data.user);
+      setError('');
+      alert('Login successful!');
     }
   };
 
   const signOut = async () => {
-    try {
-      console.log('Signing out...');
-      await supabase.auth.signOut();
-      setUser(null);
-      console.log('User signed out');
-    } catch (err) {
-      console.error('Error during sign out:', err.message);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
   };
 
   const fetchMessages = async () => {
-    try {
-      console.log('Fetching messages...');
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .order('timestamp', { ascending: true });
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('timestamp', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching messages:', error.message);
-      } else {
-        console.log('Fetched messages:', data);
-        setMessages(data || []);
-      }
-    } catch (err) {
-      console.error('Error during message fetching:', err.message);
-    }
+    if (!error) setMessages(data || []);
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    console.log('Sending message:', newMessage);
-    if (!newMessage.trim() || !user) {
-      console.error('No message or user not logged in');
-      return;
-    }
+    if (!newMessage.trim() || !user) return;
 
     const timestamp = new Date().toISOString();
     const username = user.user_metadata?.full_name || user.email.split('@')[0];
     const profilePicture = user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
-
-      if (error) {
-        console.error('Error sending message:', error.message);
-      } else {
-        console.log('Message sent successfully');
-        setNewMessage('');
-        scrollToBottom();
-      }
-    } catch (err) {
-      console.error('Error during message sending:', err.message);
-    }
+    await supabase
+      .from('messages')
+      .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
+    setNewMessage('');
+    scrollToBottom();
   };
 
   const handleTyping = () => {
-    console.log('Handling typing...');
     if (typingTimerRef.current) {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers((prev) => new Set(prev).add(user?.email));
-
     typingTimerRef.current = setTimeout(() => {
-      setTypingUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(user?.email);
-        return newSet;
-      });
+      setTypingUsers((prev) => new Set(prev).delete(user?.email));
     }, typingTimeout);
   };
 
   const scrollToBottom = () => {
-    console.log('Scrolling to bottom...');
     const messagesContainer = document.getElementById('messages');
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -227,13 +155,15 @@ export default function Chatroom() {
           <input
             type="email"
             id="email-login-input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter email for login"
-            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
           />
-          <button onClick={() => signInWithEmail(document.getElementById('email-login-input').value)}>Submit</button>
+          <button onClick={signInWithEmail}>Submit</button>
         </div>
 
-        {otp && (
+        {otpSent && (
           <div>
             <input
               type="text"
@@ -244,6 +174,8 @@ export default function Chatroom() {
             <button onClick={verifyOtp}>Verify OTP</button>
           </div>
         )}
+
+        {error && <p className="error-message">{error}</p>}
       </div>
     );
   }
