@@ -2,10 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Chatroom() {
+  const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [username, setUsername] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState(new Set());
@@ -13,24 +12,9 @@ export default function Chatroom() {
   const typingTimerRef = useRef(null);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 3000);
-
-    if (typeof window !== 'undefined') {
-      const storedTheme = localStorage.getItem('theme');
-      if (storedTheme) {
-        console.log('Stored theme:', storedTheme);
-        setTheme(storedTheme);
-        document.body.setAttribute('data-theme', storedTheme);
-      }
-
-      const storedUsername = localStorage.getItem('username');
-      const storedProfilePicture = localStorage.getItem('profilePicture');
-      setUsername(storedUsername || '');
-      setProfilePicture(storedProfilePicture || '');
-    }
-
+    checkAuth();
     fetchMessages();
-
+    
     const channel = supabase
       .channel('realtime:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
@@ -43,6 +27,35 @@ export default function Chatroom() {
     };
   }, []);
 
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      setUser(session.user);
+    }
+    
+    setLoading(false);
+  };
+
+  const signInWithDiscord = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+    });
+
+    if (error) console.error('Login error:', error.message);
+  };
+
+  const signInWithEmail = async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({ email });
+
+    if (error) console.error('Email login error:', error.message);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   const fetchMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
@@ -54,29 +67,17 @@ export default function Chatroom() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !username.trim()) return;
+    if (!newMessage.trim() || !user) return;
 
     const timestamp = new Date().toISOString();
-    // If profile picture is empty, set to default one
-    const pfpToUse = profilePicture.trim() || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
+    const username = user.user_metadata?.full_name || user.email.split('@')[0];
+    const profilePicture = user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
     await supabase
       .from('messages')
-      .insert([{ username, message: newMessage, profile_picture: pfpToUse, timestamp }]);
+      .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
     setNewMessage('');
     scrollToBottom();
-  };
-
-  const handleUsernameChange = (e) => {
-    const value = e.target.value;
-    setUsername(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('username', value);
-    }
-  };
-
-  const handleProfilePictureChange = (e) => {
-    setProfilePicture(e.target.value);
   };
 
   const handleTyping = () => {
@@ -84,12 +85,12 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers(prev => new Set(prev).add(username));
+    setTypingUsers(prev => new Set(prev).add(user?.email));
 
     typingTimerRef.current = setTimeout(() => {
       setTypingUsers(prev => {
         const newSet = new Set(prev);
-        newSet.delete(username);
+        newSet.delete(user?.email);
         return newSet;
       });
     }, typingTimeout);
@@ -100,42 +101,6 @@ export default function Chatroom() {
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-  };
-
-  const deleteMessage = async (messageId) => {
-    const { error } = await supabase
-      .from('messages')
-      .delete()
-      .eq('id', messageId);
-
-    if (!error) {
-      setMessages((prev) => prev.filter(msg => msg.id !== messageId));
-    }
-  };
-
-  const editMessage = async (messageId, newContent) => {
-    const { error } = await supabase
-      .from('messages')
-      .update({ message: newContent })
-      .eq('id', messageId);
-
-    if (!error) {
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === messageId ? { ...msg, message: newContent } : msg))
-      );
-    }
-  };
-
-  const typingText = () => {
-    const typingArray = Array.from(typingUsers);
-    if (typingArray.length === 1) {
-      return `${typingArray[0]} is typing...`;
-    } else if (typingArray.length === 2) {
-      return `${typingArray.join(' and ')} are typing...`;
-    } else if (typingArray.length > 2) {
-      return 'Multiple people are typing...';
-    }
-    return '';
   };
 
   if (loading) {
@@ -149,10 +114,27 @@ export default function Chatroom() {
     );
   }
 
+  if (!user) {
+    return (
+      <div id="auth-container">
+        <h1>🔥•LitChat V1•🔥</h1>
+        <h5>By 🔥•Ember Studios•🔥</h5>
+        <button onClick={signInWithDiscord}>Login with Discord</button>
+        <input
+          type="email"
+          placeholder="Enter email for login"
+          onKeyDown={(e) => e.key === 'Enter' && signInWithEmail(e.target.value)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div id="chat-container">
       <h1>🔥•LitChat V1•🔥</h1>
       <h5>By 🔥•Ember Studios•🔥</h5>
+
+      <button onClick={signOut}>Logout</button>
 
       <div id="theme-selector">
         <label htmlFor="theme-dropdown">Theme:</label>
@@ -162,11 +144,8 @@ export default function Chatroom() {
           onChange={(e) => {
             const newTheme = e.target.value;
             setTheme(newTheme);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('theme', newTheme);
-              document.body.setAttribute('data-theme', newTheme);
-              console.log('Applied theme:', newTheme);
-            }
+            localStorage.setItem('theme', newTheme);
+            document.body.setAttribute('data-theme', newTheme);
           }}
         >
           <option value="default">Default</option>
@@ -180,57 +159,20 @@ export default function Chatroom() {
         </select>
       </div>
 
-      <div id="username-container">
-        <label>Username:</label>
-        <input
-          type="text"
-          placeholder="Enter your username"
-          value={username}
-          onChange={handleUsernameChange}
-        />
-      </div>
-
-      <div id="profile-picture-container">
-        <label>Profile Picture URL:</label>
-        <input
-          type="text"
-          placeholder="Enter your profile picture URL"
-          value={profilePicture}
-          onChange={handleProfilePictureChange}
-        />
-      </div>
-
       <div id="typing-indicator">
-        <p>{typingText()}</p>
+        <p>{typingUsers.size > 0 && 'Someone is typing...'}</p>
       </div>
 
       <div id="messages">
         {messages.map((msg) => (
           <div key={msg.id} className="message">
-            <img
-              src={msg.profile_picture || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117'}
-              alt="PFP"
-              className="pfp"
-            />
+            <img src={msg.profile_picture} alt="PFP" className="pfp" />
             <div>
               <strong className="username">{msg.username}</strong>
               <span className="timestamp">
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </span>
               <p>{msg.message}</p>
-
-              {/* Edit and Delete buttons only for user's own messages */}
-              {msg.username === username && (
-                <div className="message-actions">
-                  <button onClick={() => deleteMessage(msg.id)}>Delete</button>
-                  <button onClick={() => {
-                    const newMessage = prompt("Edit your message:", msg.message);
-                    if (newMessage !== null) {
-                      editMessage(msg.id, newMessage);
-                    }
-                  }}>Edit</button>
-                </div>
-              )}
             </div>
           </div>
         ))}
