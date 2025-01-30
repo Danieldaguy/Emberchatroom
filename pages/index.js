@@ -11,10 +11,11 @@ export default function Chatroom() {
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
+  // Check user session on mount
   useEffect(() => {
     checkAuth();
     fetchMessages();
-    
+
     const channel = supabase
       .channel('realtime:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
@@ -33,7 +34,7 @@ export default function Chatroom() {
     if (session) {
       setUser(session.user);
     }
-    
+
     setLoading(false);
   };
 
@@ -48,7 +49,11 @@ export default function Chatroom() {
   const signInWithEmail = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({ email });
 
-    if (error) console.error('Email login error:', error.message);
+    if (error) {
+      console.error('Email login error:', error.message);
+    } else {
+      alert('Check your email for the login link!');
+    }
   };
 
   const signOut = async () => {
