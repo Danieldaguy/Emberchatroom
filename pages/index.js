@@ -11,7 +11,12 @@ export default function Chatroom() {
   const [email, setEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
-  const [typingUsers, setTypingUsers] = useState(new Set()); // Define typingUsers state
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const [profileModal, setProfileModal] = useState(null);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [gifsOpen, setGifsOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [admin, setAdmin] = useState(false);
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
@@ -21,9 +26,13 @@ export default function Chatroom() {
 
     const channel = supabase
       .channel('realtime:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
-      })
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
       .subscribe();
 
     return () => {
@@ -35,6 +44,16 @@ export default function Chatroom() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       setUser(session.user);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (data) {
+        setUser((prev) => ({ ...prev, ...data }));
+        setAdmin(data.role === 'admin');
+      }
     }
     setLoading(false);
   };
@@ -82,6 +101,20 @@ export default function Chatroom() {
       setUser(data.user);
       setError('');
       alert('Login successful!');
+
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (!existingUser) {
+        const username = prompt('Enter your unique username:');
+        const profilePicture = prompt('Enter your profile picture URL:');
+        await supabase.from('users').insert([
+          { id: data.user.id, username, profile_picture: profilePicture, display_name: username },
+        ]);
+      }
     }
   };
 
@@ -104,12 +137,12 @@ export default function Chatroom() {
     if (!newMessage.trim() || !user) return;
 
     const timestamp = new Date().toISOString();
-    const username = user.user_metadata?.full_name || user.email.split('@')[0];
-    const profilePicture = user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
+    const { username, display_name, profile_picture } = user;
 
     await supabase
       .from('messages')
-      .insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
+      .insert([{ username, display_name, message: newMessage, profile_picture, timestamp }]);
+
     setNewMessage('');
     scrollToBottom();
   };
@@ -119,15 +152,21 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers((prev) => new Set(prev).add(user?.email)); // Add the user to typingUsers
+    setTypingUsers((prev) => new Set(prev).add(user?.id));
 
     typingTimerRef.current = setTimeout(() => {
       setTypingUsers((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(user?.email); // Remove the user after timeout
+        newSet.delete(user?.id);
         return newSet;
       });
     }, typingTimeout);
+  };
+
+  const banUser = async (username) => {
+    if (!admin) return;
+    await supabase.from('banned_users').insert([{ username }]);
+    alert(`User ${username} has been banned.`);
   };
 
   const scrollToBottom = () => {
@@ -141,9 +180,6 @@ export default function Chatroom() {
     return (
       <div id="loading-screen">
         <h1>🔥 Loading LitChat... 🔥</h1>
-        <div id="loading-bar">
-          <span></span>
-        </div>
       </div>
     );
   }
@@ -152,33 +188,15 @@ export default function Chatroom() {
     return (
       <div id="auth-container">
         <h1>🔥•LitChat V1•🔥</h1>
-        <h5>By 🔥•Ember Studios•🔥</h5>
         <button onClick={signInWithDiscord}>Login with Discord</button>
-
-        <div>
-          <input
-            type="email"
-            id="email-login-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email for login"
-            onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
-          />
-          <button onClick={signInWithEmail}>Submit</button>
-        </div>
-
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email" />
+        <button onClick={signInWithEmail}>Submit</button>
         {otpSent && (
-          <div>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter OTP"
-            />
+          <>
+            <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" />
             <button onClick={verifyOtp}>Verify OTP</button>
-          </div>
+          </>
         )}
-
         {error && <p className="error-message">{error}</p>}
       </div>
     );
@@ -187,56 +205,32 @@ export default function Chatroom() {
   return (
     <div id="chat-container">
       <h1>🔥•LitChat V1•🔥</h1>
-      <h5>By 🔥•Ember Studios•🔥</h5>
-
       <button onClick={signOut}>Logout</button>
-
-      <div id="theme-selector">
-        <label htmlFor="theme-dropdown">Theme:</label>
-        <select
-          id="theme-dropdown"
-          value={theme}
-          onChange={(e) => {
-            const newTheme = e.target.value;
-            setTheme(newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.body.setAttribute('data-theme', newTheme);
-          }}
-        >
-          <option value="default">Default</option>
-          <option value="sunset">Sunset</option>
-          <option value="fire">Fire</option>
-          <option value="blue-fire">Blue Fire</option>
-          <option value="void">Void</option>
-          <option value="acid">Acid</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </div>
-
-      <div id="typing-indicator">
-        <p>{typingUsers.size} users typing...</p>
-      </div>
-
+      <button onClick={() => setProfileModal(user)}>Profile</button>
       <div id="messages">
-        {messages.map((message, index) => (
+        {messages.map((msg, index) => (
           <div className="message" key={index}>
-            <img className="pfp" src={message.profile_picture} alt="profile" />
-            <strong className="username">{message.username}</strong>: {message.message}
+            <img className="pfp" src={msg.profile_picture} alt="profile" onClick={() => setProfileModal(msg)} />
+            <strong className="display-name">{msg.display_name}</strong>
+            <small className="username">{msg.username}</small>: {msg.message}
           </div>
         ))}
       </div>
-
       <form onSubmit={sendMessage}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
-          onKeyDown={handleTyping}
-        />
+        <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleTyping} placeholder="Type a message..." />
         <button type="submit">Send</button>
+        <button onClick={() => setEmojiPickerOpen(!emojiPickerOpen)}>😀</button>
       </form>
+      {profileModal && (
+        <div id="profile-modal">
+          <h2>Profile</h2>
+          <img src={profileModal.profile_picture} alt="profile" />
+          <p>Display Name: {profileModal.display_name}</p>
+          <p>Username: {profileModal.username}</p>
+          {admin && <button onClick={() => banUser(profileModal.username)}>Ban</button>}
+          <button onClick={() => setProfileModal(null)}>Close</button>
+        </div>
+      )}
     </div>
   );
 }
