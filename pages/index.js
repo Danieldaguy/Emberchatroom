@@ -77,15 +77,30 @@ if (!error) setMessages(data || []);
 
 };
 
-const sendMessage = async (e) => { e.preventDefault(); if (!newMessage.trim() || !user) return;
+const sendMessage = async (e) => {
+  e.preventDefault();
 
-const timestamp = new Date().toLocaleString();
-const { username, avatar_url, display_name } = user;
+  // Debugging: Check if user and message are available
+  console.log('User:', user);
+  console.log('New Message:', newMessage);
 
-await supabase.from('messages').insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }]);
-setNewMessage('');
-scrollToBottom();
+  if (!newMessage.trim() || !user) {
+    // Optional: Alert user if message is empty or user is not logged in
+    alert('Please enter a message and ensure you are logged in!');
+    return;
+  }
 
+  const timestamp = new Date().toLocaleString();
+  const { username, avatar_url, display_name } = user;
+
+  try {
+    await supabase.from('messages').insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }]);
+    setNewMessage('');
+    scrollToBottom();
+  } catch (error) {
+    console.error('Error sending message:', error);
+    alert('There was an error sending the message.');
+  }
 };
 
 const handleTyping = () => { if (typingTimerRef.current) { clearTimeout(typingTimerRef.current); }
