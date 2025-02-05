@@ -7,11 +7,10 @@ export default function Chatroom() {
   const [newMessage, setNewMessage] = useState('');
   const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
-  const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [displayName, setDisplayName] = useState('');
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
@@ -34,7 +33,22 @@ export default function Chatroom() {
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      setUser(session.user);
+      let userData = session.user;
+      let userMetadata = userData.user_metadata;
+
+      let username = userMetadata?.custom_username || userMetadata?.preferred_username || userMetadata?.full_name || userData.email.split('@')[0];
+      let profilePicture = userMetadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
+
+      // Store or update user info in DB
+      const { data: existingUser } = await supabase.from('users').select('id').eq('id', userData.id).single();
+
+      if (!existingUser) {
+        await supabase.from('users').insert([
+          { id: userData.id, username, profile_picture: profilePicture }
+        ]);
+      }
+
+      setUser({ ...userData, username, profile_picture: profilePicture });
     }
     setLoading(false);
   };
@@ -50,39 +64,37 @@ export default function Chatroom() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
 
     if (error) {
       setError('Error sending OTP. Please try again.');
     } else {
-      setOtpSent(true);
       setError('');
       alert('Check your email for the OTP!');
     }
   };
 
-  const verifyOtp = async () => {
-    if (!otp || !email) {
-      setError('Please enter the OTP sent to your email.');
+  const handleNewUserSetup = async (userData) => {
+    let newUsername = prompt('Choose a unique username:');
+    let profilePicture = prompt('Enter your profile picture URL (optional):') || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
+
+    if (!newUsername) {
+      alert('Username is required.');
       return;
     }
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'email',
-    });
-
-    if (error) {
-      setError('Invalid OTP, please try again!');
-    } else {
-      setUser(data.user);
-      setError('');
-      alert('Login successful!');
+    // Check if username is already taken
+    const { data: existingUser } = await supabase.from('users').select('id').eq('username', newUsername).single();
+    if (existingUser) {
+      alert('Username is already taken. Try another.');
+      return;
     }
+
+    await supabase.from('users').insert([
+      { id: userData.id, username: newUsername, profile_picture: profilePicture }
+    ]);
+
+    setUser({ ...userData, username: newUsername, profile_picture: profilePicture });
   };
 
   const signOut = async () => {
@@ -104,12 +116,17 @@ export default function Chatroom() {
     if (!newMessage.trim() || !user) return;
 
     const timestamp = new Date().toISOString();
-    const username = user.user_metadata?.full_name || user.email.split('@')[0];
-    const profilePicture =
-      user.user_metadata?.avatar_url ||
-      'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
-    await supabase.from('messages').insert([{ username, message: newMessage, profile_picture: profilePicture, timestamp }]);
+    await supabase.from('messages').insert([
+      { 
+        username: user.username, 
+        display_name: displayName || user.username, 
+        message: newMessage, 
+        profile_picture: user.profile_picture, 
+        timestamp 
+      }
+    ]);
+
     setNewMessage('');
     scrollToBottom();
   };
@@ -119,12 +136,12 @@ export default function Chatroom() {
       clearTimeout(typingTimerRef.current);
     }
 
-    setTypingUsers((prev) => new Set(prev).add(user?.email));
+    setTypingUsers((prev) => new Set(prev).add(user?.username));
 
     typingTimerRef.current = setTimeout(() => {
       setTypingUsers((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(user?.email);
+        newSet.delete(user?.username);
         return newSet;
       });
     }, typingTimeout);
@@ -138,102 +155,48 @@ export default function Chatroom() {
   };
 
   if (loading) {
-    return (
-      <div id="loading-screen">
-        <h1>🔥 Loading LitChat... 🔥</h1>
-        <div id="loading-bar">
-          <span></span>
-        </div>
-      </div>
-    );
+    return <h1>🔥 Loading LitChat... 🔥</h1>;
   }
 
   return (
     <>
-      {/* Ad Campaign (Placed Outside Chat Container) */}
-      <div id="ad-container">
-        <h3>📢 Sponsored Ad 📢</h3>
-        <iframe
-          src="https://www.profitablecpmrate.com/tq25px6u6?key=5a7c351a7583310280f5929a563e481f"
-          width="100%"
-          height="90"
-          style={{ border: 'none', marginBottom: '10px' }}
-        ></iframe>
-      </div>
-
       {!user ? (
         <div id="auth-container">
           <h1>🔥•LitChat V1•🔥</h1>
-          <h5>By 🔥•Ember Studios•🔥</h5>
           <button onClick={signInWithDiscord}>Login with Discord</button>
-
           <div>
             <input
               type="email"
-              id="email-login-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email for login"
-              onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
             />
             <button onClick={signInWithEmail}>Submit</button>
           </div>
-          {otpSent && (
-            <div>
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Enter OTP"
-              />
-              <button onClick={verifyOtp}>Verify OTP</button>
-            </div>
-          )}
           {error && <p className="error-message">{error}</p>}
         </div>
       ) : (
         <div id="chat-container">
           <h1>🔥•LitChat V1•🔥</h1>
-          <h5>By 🔥•Ember Studios•🔥</h5>
           <button onClick={signOut}>Logout</button>
 
-          <div id="theme-selector">
-            <label htmlFor="theme-dropdown">Theme:</label>
-            <select
-              id="theme-dropdown"
-              value={theme}
-              onChange={(e) => {
-                const newTheme = e.target.value;
-                setTheme(newTheme);
-                localStorage.setItem('theme', newTheme);
-                document.body.setAttribute('data-theme', newTheme);
-              }}
-            >
-              <option value="default">Default</option>
-              <option value="sunset">Sunset</option>
-              <option value="fire">Fire</option>
-              <option value="blue-fire">Blue Fire</option>
-              <option value="void">Void</option>
-              <option value="acid">Acid</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-
-          <div id="typing-indicator">
-            <p>{typingUsers.size} users typing...</p>
-          </div>
+          <label>Display Name:</label>
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Enter display name"
+          />
 
           <div id="messages">
             {messages.map((message, index) => (
               <div className="message" key={index}>
                 <img className="pfp" src={message.profile_picture} alt="profile" />
-                <strong className="username">{message.username}</strong>: {message.message}
+                <strong className="username">{message.display_name}</strong>: {message.message}
               </div>
             ))}
           </div>
 
-          {/* Chat Input */}
           <form onSubmit={sendMessage}>
             <input
               type="text"
