@@ -113,7 +113,7 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toLocaleString();
     const { username, avatar_url, display_name } = user;
 
     await supabase.from('messages').insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }]);
@@ -142,6 +142,14 @@ export default function Chatroom() {
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+  };
+
+  const renderTypingIndicator = () => {
+    const typingArray = Array.from(typingUsers);
+    if (typingArray.length === 1) return <p>{typingArray[0]} is typing...</p>;
+    if (typingArray.length === 2) return <p>{typingArray[0]} & {typingArray[1]} are typing...</p>;
+    if (typingArray.length >= 3) return <p>Multiple people are typing...</p>;
+    return null;
   };
 
   if (loading) {
@@ -220,15 +228,13 @@ export default function Chatroom() {
             </select>
           </div>
 
-          <div id="typing-indicator">
-            <p>{typingUsers.size} users typing...</p>
-          </div>
+          <div id="typing-indicator">{renderTypingIndicator()}</div>
 
           <div id="messages">
             {messages.map((message, index) => (
               <div className="message" key={index}>
                 <img className="pfp" src={message.profile_picture} alt="profile" />
-                <strong className="username">{message.display_name}</strong>: {message.message}
+                <strong className="username">{message.display_name}</strong>: {message.message} <span className="timestamp">({message.timestamp})</span>
               </div>
             ))}
           </div>
