@@ -107,7 +107,10 @@ export default function Chatroom() {
   };
 
   const fetchMessages = async () => {
-    const { data, error } = await supabase.from('messages').select('*').order('timestamp', { ascending: true });
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, username, display_name, message, profile_picture, timestamp')
+      .order('timestamp', { ascending: true });
 
     if (!error) setMessages(data || []);
   };
@@ -122,7 +125,7 @@ export default function Chatroom() {
     const { data, error } = await supabase
       .from('messages')
       .insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }])
-      .select();
+      .select('id, username, display_name, message, profile_picture, timestamp');
 
     if (!error && data) {
       setMessages((prev) => [...prev, ...data]);
@@ -228,8 +231,8 @@ export default function Chatroom() {
           <button onClick={signOut}>Logout</button>
 
           <div id="messages">
-            {messages.map((message, index) => (
-              <div className="message" key={index}>
+            {messages.map((message) => (
+              <div className="message" key={message.id}>
                 <img className="pfp" src={message.profile_picture} alt="profile" />
                 <strong className="username">{message.display_name}</strong>: {message.message}{' '}
                 <span className="timestamp">({getFormattedTime(message.timestamp)})</span>
