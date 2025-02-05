@@ -113,6 +113,11 @@ export default function Chatroom() {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
+    if (newMessage.length > 1000) {
+      setError('Message is too long, please shorten it.');
+      return;
+    }
+
     const timestamp = new Date().toLocaleString();
     const { username, avatar_url, display_name } = user;
 
