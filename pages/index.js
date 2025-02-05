@@ -5,6 +5,7 @@ export default function Chatroom() {
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
@@ -35,9 +36,7 @@ export default function Chatroom() {
   }, []);
 
   const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const { user } = session;
       let { username, display_name, avatar_url } = user.user_metadata;
@@ -189,30 +188,105 @@ export default function Chatroom() {
 
   return (
     <>
-      <div id="chat-container">
+      <div id="ad-container">
+        <h3>📢 Sponsored Ad 📢</h3>
+        <iframe
+          src="https://www.profitablecpmrate.com/tq25px6u6?key=5a7c351a7583310280f5929a563e481f"
+          width="100%"
+          height="90"
+          style={{ border: 'none', marginBottom: '10px' }}
+        ></iframe>
+      </div>
+
+      {!user ? (
+        <div id="auth-container">
+          <h1>🔥•LitChat V1•🔥</h1>
+          <h5>By 🔥•Ember Studios•🔥</h5>
+          <button onClick={signInWithDiscord}>Login with Discord</button>
+          <div>
+            <input
+              type="email"
+              id="email-login-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email for login"
+              onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
+            />
+            <button onClick={signInWithEmail}>Submit</button>
+          </div>
+          {otpSent && (
+            <div>
+              <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" />
+              <button onClick={verifyOtp}>Verify OTP</button>
+            </div>
+          )}
+          {error && <p className="error-message">{error}</p>}
+        </div>
+      ) : (
+        <div id="chat-container">
+          <h1>🔥•LitChat V1•🔥</h1>
+          <h5>By 🔥•Ember Studios•🔥</h5>
+          <button onClick={signOut}>Logout</button>
+<h1>🔥• Welcome to LitChat •🔥</h1>
+      <p>Sign in to start chatting!</p>
+      <button onClick={signInWithDiscord}>Sign in with Discord</button>
+      <input 
+        type="email" 
+        placeholder="Enter your email" 
+        value={email} 
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button onClick={signInWithEmail}>Get OTP</button>
+
+      {otpSent && (
+        <>
+          <input 
+            type="text" 
+            placeholder="Enter OTP" 
+            value={otp} 
+            onChange={(e) => setOtp(e.target.value)}
+          />
+          <button onClick={verifyOtp}>Verify OTP</button>
+        </>
+      )}
+
+      {error && <p className="error">{error}</p>}
+    </div>
+  ) : (
+    <div id="chatroom">
+      <div id="header">
+        <h2>🔥 LitChat 🔥</h2>
+        <button onClick={signOut}>Sign Out</button>
+      </div>
+
+      <div id="messages-container">
         <div id="messages">
           {messages.map((msg) => (
             <div key={msg.id} className="message">
-              <img src={msg.profile_picture} alt="PFP" className="profile-pic" />
+              <img src={msg.profile_picture} alt={`${msg.username}'s avatar`} />
               <div className="message-content">
-                <strong>{msg.display_name}</strong> <span className="time">{getFormattedTime(msg.timestamp)}</span>
-                <p>{msg.message}</p>
+                <span className="message-user">{msg.display_name || msg.username}</span>
+                <span className="message-text">{msg.message}</span>
+                <span className="message-time">{getFormattedTime(msg.timestamp)}</span>
               </div>
             </div>
           ))}
         </div>
-        <div id="typing-indicator">{getTypingText()}</div>
-        <form onSubmit={sendMessage}>
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleTyping}
-            placeholder="Type your message..."
-          />
-          <button type="submit">Send</button>
-        </form>
+        <p id="typing-indicator">{getTypingText()}</p>
       </div>
-    </>
-  );
+
+      <form onSubmit={sendMessage}>
+        <input 
+          type="text" 
+          placeholder="Type a message..." 
+          value={newMessage} 
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={handleTyping}
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  )}
+</>
+);
 }
