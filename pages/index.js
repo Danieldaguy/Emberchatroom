@@ -5,7 +5,6 @@ export default function Chatroom() {
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [theme, setTheme] = useState('default');
   const [loading, setLoading] = useState(true);
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
@@ -190,62 +189,30 @@ export default function Chatroom() {
 
   return (
     <>
-      <div id="ad-container">
-        <h3>📢 Sponsored Ad 📢</h3>
-        <iframe
-          src="https://www.profitablecpmrate.com/tq25px6u6?key=5a7c351a7583310280f5929a563e481f"
-          width="100%"
-          height="90"
-          style={{ border: 'none', marginBottom: '10px' }}
-        ></iframe>
-      </div>
-
-      {!user ? (
-        <div id="auth-container">
-          <h1>🔥•LitChat V1•🔥</h1>
-          <h5>By 🔥•Ember Studios•🔥</h5>
-          <button onClick={signInWithDiscord}>Login with Discord</button>
-          <div>
-            <input
-              type="email"
-              id="email-login-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email for login"
-              onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
-            />
-            <button onClick={signInWithEmail}>Submit</button>
-          </div>
-          {otpSent && (
-            <div>
-              <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" />
-              <button onClick={verifyOtp}>Verify OTP</button>
-            </div>
-          )}
-          {error && <p className="error-message">{error}</p>}
-        </div>
-      ) : (
-        <div id="chat-container">
-          <h1>🔥•LitChat V1•🔥</h1>
-          <h5>By 🔥•Ember Studios•🔥</h5>
-          <button onClick={signOut}>Logout</button>
-
-          <div id="messages">
-            {messages.map((message) => (
-              <div className="message" key={message.id}>
-                <img className="pfp" src={message.profile_picture} alt="profile" />
-                <strong className="username">{message.display_name}</strong>: {message.message}{' '}
-                <span className="timestamp">({getFormattedTime(message.timestamp)})</span>
+      <div id="chat-container">
+        <div id="messages">
+          {messages.map((msg) => (
+            <div key={msg.id} className="message">
+              <img src={msg.profile_picture} alt="PFP" className="profile-pic" />
+              <div className="message-content">
+                <strong>{msg.display_name}</strong> <span className="time">{getFormattedTime(msg.timestamp)}</span>
+                <p>{msg.message}</p>
               </div>
-            ))}
-          </div>
-
-          <form onSubmit={sendMessage}>
-            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." onKeyDown={handleTyping} />
-            <button type="submit">Send</button>
-          </form>
+            </div>
+          ))}
         </div>
-      )}
+        <div id="typing-indicator">{getTypingText()}</div>
+        <form onSubmit={sendMessage}>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleTyping}
+            placeholder="Type your message..."
+          />
+          <button type="submit">Send</button>
+        </form>
+      </div>
     </>
   );
 }
