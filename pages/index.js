@@ -29,6 +29,7 @@ export default function Chatroom() {
     return () => {
       supabase.removeChannel(channel);
     };
+
   }, []);
 
   const checkAuth = async () => { 
@@ -101,9 +102,9 @@ export default function Chatroom() {
   };
 
   const fetchMessages = async () => { 
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
+    const { data, error } = await supabase 
+      .from('messages') 
+      .select('*') 
       .order('timestamp', { ascending: true });
 
     if (!error) setMessages(data || []);
@@ -115,10 +116,19 @@ export default function Chatroom() {
 
     const timestamp = new Date().toISOString();
     const { username, avatar_url, display_name } = user;
+    const newMsg = { username, display_name, message: newMessage, profile_picture: avatar_url, timestamp };
 
-    await supabase.from('messages').insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }]);
-    setNewMessage('');
-    scrollToBottom();
+    setMessages((prev) => [...prev, newMsg]);
+
+    const { error } = await supabase.from('messages').insert([newMsg]);
+
+    if (error) {
+      console.error('Error sending message:', error);
+      setMessages((prev) => prev.filter((msg) => msg.timestamp !== timestamp));
+    } else {
+      setNewMessage('');
+      scrollToBottom();
+    }
   };
 
   const handleTyping = () => { 
@@ -144,23 +154,23 @@ export default function Chatroom() {
     } 
   };
 
-  const getFormattedTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+  const getFormattedTime = (timestamp) => { 
+    const date = new Date(timestamp); 
+    const hours = date.getHours().toString().padStart(2, '0'); 
+    const minutes = date.getMinutes().toString().padStart(2, '0'); 
+    return `${hours}:${minutes}`; 
   };
 
-  const getTypingText = () => {
-    const typingArray = Array.from(typingUsers);
-    if (typingArray.length === 1) {
-      return `${typingArray[0]} is typing...`;
-    } else if (typingArray.length === 2) {
-      return `${typingArray[0]} & ${typingArray[1]} are typing...`;
-    } else if (typingArray.length > 2) {
-      return 'Multiple people are typing...';
-    }
-    return '';
+  const getTypingText = () => { 
+    const typingArray = Array.from(typingUsers); 
+    if (typingArray.length === 1) { 
+      return `${typingArray[0]} is typing...`; 
+    } else if (typingArray.length === 2) { 
+      return `${typingArray[0]} & ${typingArray[1]} are typing...`; 
+    } else if (typingArray.length > 2) { 
+      return 'Multiple people are typing...'; 
+    } 
+    return ''; 
   };
 
   if (loading) { 
@@ -187,14 +197,7 @@ export default function Chatroom() {
           <h5>By 🔥•Ember Studios•🔥</h5>
           <button onClick={signInWithDiscord}>Login with Discord</button>
           <div>
-            <input
-              type="email"
-              id="email-login-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email for login"
-              onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email for login" onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()} />
             <button onClick={signInWithEmail}>Submit</button>
           </div>
           {otpSent && (
@@ -211,23 +214,6 @@ export default function Chatroom() {
           <h5>By 🔥•Ember Studios•🔥</h5>
           <button onClick={signOut}>Logout</button>
 
-          <div id="theme-selector">
-            <label htmlFor="theme-dropdown">Theme:</label>
-            <select
-              id="theme-dropdown"
-              value={theme}
-              onChange={(e) => {
-                const newTheme = e.target.value;
-                setTheme(newTheme);
-                localStorage.setItem('theme', newTheme);
-                document.body.setAttribute('data-theme', newTheme);
-              }}
-            >
-              <option value="default">Default</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-
           <div id="typing-indicator">
             <p>{getTypingText()}</p>
           </div>
@@ -235,12 +221,18 @@ export default function Chatroom() {
           <div id="messages">
             {messages.map((message, index) => (
               <div className="message" key={index}>
-                <strong className="username">{message.display_name}</strong>: {message.message}
+                <img className="pfp" src={message.profile_picture} alt="profile" />
+                <strong className="username">{message.display_name}</strong>: {message.message} <span className="timestamp">({getFormattedTime(message.timestamp)})</span>
               </div>
             ))}
           </div>
+
+          <form onSubmit={sendMessage}>
+            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." onKeyDown={handleTyping} />
+            <button type="submit">Send</button>
+          </form>
         </div>
       )}
     </>
-  );
+  ); 
 }
