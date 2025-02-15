@@ -1,26 +1,37 @@
-import { useEffect, useState, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { Helmet } from 'react-helmet';
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { Helmet } from "react-helmet";
 
 export default function Chatroom() {
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
+  const [newMessage, setNewMessage] = useState("");
+  const [theme, setTheme] = useState("default");
   const [loading, setLoading] = useState(true);
-  const [otp, setOtp] = useState('');
-  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [typingUsers, setTypingUsers] = useState(new Set());
   const [reactions, setReactions] = useState({});
   const [polls, setPolls] = useState([]);
+  const [media, setMedia] = useState(null);
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
 
+  // Ensure localStorage access only on client side
   useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.body.setAttribute("data-theme", theme);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", theme);
+    }
   }, [theme]);
 
   useEffect(() => {
@@ -34,29 +45,30 @@ export default function Chatroom() {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+      const { data } = await supabase.from("messages").select("*").order("created_at", { ascending: true });
       setMessages(data || []);
     };
     fetchMessages();
   }, []);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !media) return;
 
     const messageData = {
       user_id: user.id,
       content: newMessage,
+      media_url: media || null,
       created_at: new Date().toISOString(),
     };
 
-    await supabase.from('messages').insert([messageData]);
+    await supabase.from("messages").insert([messageData]);
     setMessages([...messages, messageData]);
-    setNewMessage('');
+    setNewMessage("");
+    setMedia(null);
   };
 
   const handleTyping = () => {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-
     setTypingUsers(new Set([...typingUsers, user.email]));
 
     typingTimerRef.current = setTimeout(() => {
@@ -108,12 +120,14 @@ export default function Chatroom() {
       {loading ? (
         <div id="loading-screen">
           <h1>Loading...</h1>
-          <div id="loading-bar"><span></span></div>
+          <div id="loading-bar">
+            <span></span>
+          </div>
         </div>
       ) : (
         <div id="chat-container">
           <h1>Chatroom</h1>
-          
+
           {/* Theme Selector */}
           <div id="theme-selector">
             <label>Theme:</label>
@@ -136,10 +150,13 @@ export default function Chatroom() {
                 <div>
                   <p className="username">{msg.user_id}</p>
                   <p>{msg.content}</p>
+                  {msg.media_url && <img src={msg.media_url} alt="Media" className="media" />}
                   <span className="timestamp">{new Date(msg.created_at).toLocaleTimeString()}</span>
-                  <button onClick={() => handleReaction(msg.id, '👍')}>👍</button>
-                  <button onClick={() => handleReaction(msg.id, '❤️')}>❤️</button>
-                  <button onClick={() => handleReaction(msg.id, '😂')}>😂</button>
+                  <button onClick={() => handleReaction(msg.id, "👍")}>👍</button>
+                  <button onClick={() => handleReaction(msg.id, "❤️")}>❤️</button>
+                  <button onClick={() => handleReaction(msg.id, "😂")}>😂</button>
+                  <button onClick={() => handleReaction(msg.id, "🔥")}>🔥</button>
+                  <button onClick={() => handleReaction(msg.id, "🎉")}>🎉</button>
                   {reactions[msg.id] && <span>{reactions[msg.id]}</span>}
                 </div>
               </div>
@@ -147,9 +164,7 @@ export default function Chatroom() {
           </div>
 
           {/* Typing Indicator */}
-          {typingUsers.size > 0 && (
-            <p className="typing-indicator">{[...typingUsers].join(', ')} is typing...</p>
-          )}
+          {typingUsers.size > 0 && <p className="typing-indicator">{[...typingUsers].join(", ")} is typing...</p>}
 
           {/* Polls */}
           <div id="polls">
@@ -165,15 +180,15 @@ export default function Chatroom() {
             ))}
           </div>
 
+          {/* Image/GIF Upload */}
+          <div id="media-upload">
+            <input type="file" accept="image/*,video/*" onChange={(e) => setMedia(URL.createObjectURL(e.target.files[0]))} />
+            {media && <img src={media} alt="Preview" className="media-preview" />}
+          </div>
+
           {/* Input Field */}
           <div id="input-container">
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleTyping}
-            />
+            <input type="text" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={handleTyping} />
             <button onClick={handleSendMessage}>Send</button>
           </div>
         </div>
