@@ -1,235 +1,168 @@
-import { useEffect, useState, useRef } from 'react';  
-import { supabase } from '../lib/supabaseClient';  
-import { Helmet } from 'react-helmet';  
+import { useEffect, useState, useRef } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { Helmet } from 'react-helmet';
 
-export default function Chatroom() {  
-  const [user, setUser] = useState(null);  
-  const [messages, setMessages] = useState([]);  
-  const [newMessage, setNewMessage] = useState('');  
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');  
-  const [loading, setLoading] = useState(true);  
-  const [otp, setOtp] = useState('');  
-  const [email, setEmail] = useState('');  
-  const [otpSent, setOtpSent] = useState(false);  
-  const [error, setError] = useState('');  
-  const [typingUsers, setTypingUsers] = useState(new Set());  
-  const typingTimeout = 2000;  
-  const typingTimerRef = useRef(null);  
+export default function Chatroom() {
+  const [user, setUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'default');
+  const [loading, setLoading] = useState(true);
+  const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState('');
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const typingTimeout = 2000;
+  const typingTimerRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-  useEffect(() => {  
-    checkAuth();  
-    fetchMessages();  
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
-    const channel = supabase  
-      .channel('realtime:messages')  
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {  
-        setMessages((prev) => [...prev, payload.new]);  
-        scrollToBottom();
-      })  
-      .subscribe();  
-
-    return () => {  
-      supabase.removeChannel(channel);  
-    };  
-  }, []);  
-
-  const checkAuth = async () => {  
-    const { data: { session } } = await supabase.auth.getSession();  
-    if (session) {  
-      const { user } = session;  
-      let { username, display_name, avatar_url } = user.user_metadata;  
-
-      if (!username) {  
-        if (user.app_metadata.provider === 'discord') {  
-          username = user.user_metadata.full_name;  
-          avatar_url = user.user_metadata.avatar_url;  
-        } else {  
-          username = prompt('Choose your unique username (Support required to change it):');  
-          avatar_url = prompt('Enter your profile picture URL:');  
-          await supabase.auth.updateUser({ data: { username, avatar_url } });  
-        }  
-      }  
-
-      setUser({ id: user.id, username, display_name: display_name || username, avatar_url });  
-    }  
-    setLoading(false);  
-  };  
-
-  const signInWithDiscord = async () => {  
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });  
-    if (error) setError(error.message);  
-  };  
-
-  const signInWithEmail = async () => {  
-    if (!email) {  
-      setError('Please enter a valid email.');  
-      return;  
-    }  
-
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });  
-
-    if (error) {  
-      setError('Error sending OTP. Please try again.');  
-    } else {  
-      setOtpSent(true);  
-      setError('');  
-      alert('Check your email for the OTP!');  
-    }  
-  };  
-
-  const verifyOtp = async () => {  
-    if (!otp || !email) {  
-      setError('Please enter the OTP sent to your email.');  
-      return;  
-    }  
-
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' });  
-
-    if (error) {  
-      setError('Invalid OTP, please try again!');  
-    } else {  
-      setUser(data.user);  
-      setError('');  
-      alert('Login successful!');  
-    }  
-  };  
-
-  const signOut = async () => {  
-    await supabase.auth.signOut();  
-    setUser(null);  
-  };  
-
-  const fetchMessages = async () => {  
-    const { data, error } = await supabase  
-      .from('messages')  
-      .select('*')  
-      .order('timestamp', { ascending: true });  
-
-    if (!error) setMessages(data || []);  
-  };  
-
-  const sendMessage = async (e) => {  
-    e.preventDefault();  
-    if (!newMessage.trim() || !user) return;  
-
-    const timestamp = new Date().toLocaleString();  
-    const { username, avatar_url, display_name } = user;  
-
-    await supabase.from('messages').insert([{ username, display_name, message: newMessage, profile_picture: avatar_url, timestamp }]);  
-    setNewMessage('');  
-  };  
-
-  const handleTyping = () => {  
-    if (typingTimerRef.current) {  
-      clearTimeout(typingTimerRef.current);  
-    }  
-
-    setTypingUsers((prev) => new Set(prev).add(user?.username));  
-
-    typingTimerRef.current = setTimeout(() => {  
-      setTypingUsers((prev) => {  
-        const newSet = new Set(prev);  
-        newSet.delete(user?.username);  
-        return newSet;  
-      });  
-    }, typingTimeout);  
-  };  
-
-  const scrollToBottom = () => {  
-    setTimeout(() => {
-      const messagesContainer = document.getElementById('messages');  
-      if (messagesContainer) {  
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;  
+  useEffect(() => {
+    async function fetchMessages() {
+      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+      if (!error) {
+        setMessages(data);
+        setLoading(false);
       }
-    }, 100);
-  };  
+    }
 
-  const renderTypingIndicator = () => {  
-    const typingArray = Array.from(typingUsers);  
-    if (typingArray.length === 1) return <p>{typingArray[0]} is typing...</p>;  
-    if (typingArray.length === 2) return <p>{typingArray[0]} & {typingArray[1]} are typing...</p>;  
-    if (typingArray.length >= 3) return <p>Multiple people are typing...</p>;  
-    return null;  
-  };  
+    fetchMessages();
 
-  if (loading) {  
-    return (  
-      <div id="loading-screen">  
-        <h1>🔥 Loading LitChat... 🔥</h1>  
-        <div id="loading-bar"></div>  
-      </div>  
-    );  
-  }  
+    const subscription = supabase
+      .channel('messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
 
-  return (  
-    <>  
-      <Helmet>  
-        <title>LitChat - Chat App</title>  
-        <meta name="description" content="Join LitChat and connect with your friends!" />  
-      </Helmet>  
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
-      {!user ? (  
-        <div id="auth-container">  
-          <h1>🔥•LitChat V1•🔥</h1>  
-          <button onClick={signInWithDiscord}>Login with Discord</button>  
-          <div>  
-            <input  
-              type="email"  
-              value={email}  
-              onChange={(e) => setEmail(e.target.value)}  
-              placeholder="Enter email for login"  
-            />  
-            <button onClick={signInWithEmail}>Submit</button>  
-          </div>  
-          {otpSent && (  
-            <div>  
-              <input  
-                type="text"  
-                value={otp}  
-                onChange={(e) => setOtp(e.target.value)}  
-                placeholder="Enter OTP"  
-              />  
-              <button onClick={verifyOtp}>Verify OTP</button>  
-            </div>  
-          )}  
-          {error && <p className="error-message">{error}</p>}  
-        </div>  
-      ) : (  
-        <div id="chat-container">  
-          <h1>🔥•LitChat V1•🔥</h1>  
-          <button onClick={signOut}>Logout</button>  
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '') return;
 
-          <div id="theme-selector">  
-            <label>Theme:</label>  
-            <select  
-              value={theme}  
-              onChange={(e) => {  
-                setTheme(e.target.value);  
-                localStorage.setItem('theme', e.target.value);  
-                document.body.setAttribute('data-theme', e.target.value);  
-              }}  
-            >  
-              <option value="default">Default</option>  
-              <option value="dark">Dark</option>  
-            </select>  
-          </div>  
+    const { error } = await supabase.from('messages').insert([{ user: user.email, content: newMessage }]);
+    if (!error) setNewMessage('');
+  };
 
-          <div id="typing-indicator">{renderTypingIndicator()}</div>  
+  const handleTyping = () => {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
 
-          <div id="messages">  
-            {messages.map((msg, index) => (  
-              <div key={index}>  
-                <strong>{msg.display_name}</strong>: {msg.message}  
-              </div>  
-            ))}  
-          </div>  
+    supabase.from('typing').insert([{ user: user.email }], { upsert: true });
 
-          <form onSubmit={sendMessage}>  
-            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleTyping} />  
-            <button type="submit">Send</button>  
-          </form>  
-        </div>  
-      )}  
-    </>  
-  );  
+    typingTimerRef.current = setTimeout(() => {
+      supabase.from('typing').delete().eq('user', user.email);
+    }, typingTimeout);
+  };
+
+  const handleLogin = async () => {
+    setError('');
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) setError(error.message);
+    else setOtpSent(true);
+  };
+
+  const handleVerifyOtp = async () => {
+    setError('');
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: otp });
+    if (error) setError(error.message);
+    else setUser(data.user);
+  };
+
+  const handleThemeChange = (event) => {
+    setTheme(event.target.value);
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Chatroom</title>
+      </Helmet>
+
+      <div id="chat-container">
+        {loading ? (
+          <div id="loading-screen">
+            <h1>Loading...</h1>
+            <div id="loading-bar"><span></span></div>
+          </div>
+        ) : user ? (
+          <>
+            <div id="theme-selector">
+              <label>Theme:</label>
+              <select value={theme} onChange={handleThemeChange}>
+                <option value="default">Default</option>
+                <option value="sunset">Sunset</option>
+                <option value="fire">Fire</option>
+                <option value="blue-fire">Blue Fire</option>
+                <option value="void">Void</option>
+                <option value="light">Light</option>
+                <option value="acid">Acid</option>
+              </select>
+            </div>
+
+            <div id="messages">
+              {messages.map((msg, index) => (
+                <div className="message" key={index}>
+                  <img className="pfp" src={`https://api.dicebear.com/7.x/identicon/svg?seed=${msg.user}`} alt="PFP" />
+                  <div>
+                    <span className="username">{msg.user}</span>
+                    <p>{msg.content}</p>
+                    <span className="timestamp">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef}></div>
+            </div>
+
+            <div id="typing-indicator">
+              {typingUsers.size > 0 && <p>Someone is typing...</p>}
+            </div>
+
+            <div id="input-container">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleTyping}
+                placeholder="Type a message..."
+              />
+              <button onClick={handleSendMessage}>Send</button>
+            </div>
+          </>
+        ) : (
+          <div id="auth-container">
+            <input
+              id="email-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+            <button id="email-submit" onClick={handleLogin}>Get OTP</button>
+
+            {otpSent && (
+              <>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Enter OTP"
+                />
+                <button onClick={handleVerifyOtp}>Verify</button>
+              </>
+            )}
+
+            {error && <p className="error">{error}</p>}
+          </div>
+        )}
+      </div>
+    </>
+  );
 }
