@@ -168,7 +168,7 @@ export default function Chatroom() {
     }
   };
 
-  if (loading) {
+  if (loading) {wfef
     return (
       <div id="loading-screen">
         <h1>🔥 Loading LitChat... 🔥</h1>
