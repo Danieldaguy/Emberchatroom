@@ -4,12 +4,12 @@ body {
   margin: 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  overflow: auto;
-  position: relative;
-  background-size: cover;
-  background-attachment: fixed;
+  height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden; /* Prevent scrolling */
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -139,41 +139,81 @@ h1, h5 {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
+/* Chat Container */
 #chat-container {
-  width: 95%;
-  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-height: 800px; /* Limit the maximum height for better readability */
+  max-width: 500px; /* Limit the maximum width for better readability */
   background: var(--container-bg);
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  gap: 20px; /* Add spacing between sections */
+  height: 90%; /* Adjust height for better responsiveness */
+  word-wrap: break-word; /* Ensure long words or links wrap properly */
 }
 
+/* Header */
+#chat-header {
+  text-align: center;
+}
+
+#chat-header h1 {
+  color: var(--accent-color);
+  font-size: 2em;
+  margin: 0;
+}
+
+#chat-header h5 {
+  color: var(--text-color);
+  font-size: 1em;
+  margin: 5px 0;
+  opacity: 0.8;
+}
+
+/* Messages Section */
 #messages {
-  max-height: 400px;
+  word-wrap: break-word;
+  flex: 1;
   overflow-y: auto;
-  margin-bottom: 15px;
-  padding-right: 5px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .message {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
-  padding: 12px;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 10px;
+  padding: 15px;
   background: var(--message-bg);
-  border-radius: 10px;
-  transition: background 0.3s ease;
+  border-radius: 12px;
+  transition: transform 0.2s ease, background 0.3s ease;
+  max-width: 100%; /* Ensure messages do not exceed the container width */
+  word-wrap: break-word; /* Wrap long text or links */
+  white-space: pre-wrap; /* Preserve whitespace and wrap text */
+  word-break: break-word; /* Break long words if necessary */
 }
 
 .message:hover {
   background: var(--message-hover);
+  transform: scale(1.02); /* Slight zoom effect */
+}
+
+.message p {
+  margin: 0; /* Remove default margin for better alignment */
+  word-wrap: break-word; /* Ensure text wraps properly */
+  white-space: pre-wrap; /* Preserve whitespace and wrap text */
+  word-break: break-word; /* Break long words if necessary */
 }
 
 .pfp {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--accent-color);
@@ -182,28 +222,36 @@ h1, h5 {
 .username {
   font-weight: bold;
   color: var(--accent-color);
+  font-size: 1em;
 }
 
 .timestamp {
   font-size: 0.8em;
   color: var(--text-color);
-  opacity: 0.7;
+  opacity: 0.6;
+}
+
+/* Input Section */
+form {
+  display: flex;
+  gap: 10px;
 }
 
 input[type="text"] {
   flex: 1;
   padding: 12px;
   font-size: 1em;
-  border: 1px solid var(--input-bg);
+  border: 2px solid var(--input-bg);
   background: var(--input-bg);
   color: var(--text-color);
-  border-radius: 8px;
+  border-radius: 12px;
   outline: none;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 input[type="text"]:focus {
   border-color: var(--accent-color);
+  box-shadow: 0 0 8px var(--accent-color);
 }
 
 button {
@@ -212,13 +260,14 @@ button {
   border: none;
   background-color: var(--accent-color);
   color: var(--bg-color);
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 button:hover {
-  background-color: #d57d26; /* A slightly darker shade */
+  background-color: #d57d26;
+  transform: scale(1.05); /* Slight zoom effect */
 }
 
 /* Theme Dropdown */
@@ -332,4 +381,41 @@ select:focus {
 
 #email-submit:hover {
   background-color: #d57d26; /* A slightly darker shade */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  #chat-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 10px;
+  }
+
+  #chat-header h1 {
+    font-size: 1.5em;
+  }
+
+  #chat-header h5 {
+    font-size: 0.9em;
+  }
+
+  .pfp {
+    width: 30px;
+    height: 30px;
+  }
+
+  .username {
+    font-size: 0.9em;
+  }
+
+  input[type="text"] {
+    padding: 10px;
+    font-size: 0.9em;
+  }
+
+  button {
+    padding: 10px 15px;
+    font-size: 0.9em;
+  }
 }
