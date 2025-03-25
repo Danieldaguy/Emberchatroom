@@ -48,16 +48,21 @@ export default function Chatroom() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: `${window.location.origin}/`, // Redirect back to the homepage after login
+        redirectTo: `${window.location.origin}`, // Redirect back to your app after login
       },
     });
-    if (error) setError(error.message);
+
+    if (error) {
+      console.error('Error logging in with Discord:', error.message);
+    }
   };
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error fetching session:', error.message);
+      } else if (session) {
         setUser(session.user);
       }
       setLoading(false);
@@ -66,36 +71,52 @@ export default function Chatroom() {
     checkSession();
   }, []);
 
-  const signInWithEmail = async () => {
-    if (!email || !password) {
-      setError('Please enter a valid email and password.');
-      return;
-    }
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    });
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe(); // Correctly unsubscribe
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const session = supabase.auth.getSession();
+    if (session) {
+      setUser(session.user);
+    }
+  }, []);
+
+  const signInWithEmail = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      setError('Invalid email or password. Please try again.');
+      console.error('Error logging in with email:', error.message);
     } else {
-      setUser(data.user);
-      setError('');
-      alert('Login successful!');
+      console.log('Login successful!');
     }
   };
 
-  const signUpWithEmail = async () => {
-    if (!email || !password) {
-      setError('Please enter a valid email and password.');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const signUpWithEmail = async (email, password) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
     if (error) {
-      setError('Error signing up. Please try again.');
+      console.error('Error signing up:', error.message);
     } else {
-      setError('');
-      alert('Sign-up successful! Please check your email to confirm your account.');
+      console.log('Sign-up successful! Please check your email to confirm your account.');
     }
   };
 
@@ -160,18 +181,43 @@ export default function Chatroom() {
 
   if (!user) {
     return (
-      <div id="auth-container">
-        <h1>🔥•LitChat V1•🔥</h1>
-        <h5>By 🔥•Ember Studios•🔥</h5>
-        <button onClick={signInWithDiscord}>Login with Discord</button>
+      <div id="auth-container" style={{ textAlign: 'center', padding: '20px', maxWidth: '400px', margin: 'auto', background: 'var(--container-bg)', borderRadius: '12px', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.6)' }}>
+        <h1 style={{ color: 'var(--accent-color)', marginBottom: '10px' }}>🔥 LitChat 🔥</h1>
+        <h5 style={{ color: 'var(--text-color)', opacity: 0.8, marginBottom: '20px' }}>By Ember Studios</h5>
 
-        <div>
+        <button
+          onClick={signInWithDiscord}
+          style={{
+            background: 'var(--accent-color)',
+            color: 'var(--bg-color)',
+            padding: '12px 20px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            transition: 'background-color 0.3s ease',
+          }}
+        >
+          Login with Discord
+        </button>
+
+        <div style={{ marginBottom: '20px' }}>
           <input
             type="email"
             id="email-login-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter email"
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '10px',
+              border: '2px solid var(--input-bg)',
+              borderRadius: '8px',
+              background: 'var(--input-bg)',
+              color: 'var(--text-color)',
+              outline: 'none',
+            }}
           />
           <input
             type="password"
@@ -179,11 +225,50 @@ export default function Chatroom() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '10px',
+              border: '2px solid var(--input-bg)',
+              borderRadius: '8px',
+              background: 'var(--input-bg)',
+              color: 'var(--text-color)',
+              outline: 'none',
+            }}
           />
-          <button onClick={signInWithEmail}>Login</button>
-          <button onClick={signUpWithEmail}>Sign Up</button>
+          <button
+            onClick={() => signInWithEmail(email, password)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'var(--accent-color)',
+              color: 'var(--bg-color)',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              marginBottom: '10px',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => signUpWithEmail(email, password)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'var(--accent-color)',
+              color: 'var(--bg-color)',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease',
+            }}
+          >
+            Sign Up
+          </button>
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
       </div>
     );
   }
