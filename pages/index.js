@@ -15,6 +15,30 @@ export default function Chatroom() {
   const [typingUsers, setTypingUsers] = useState(new Set()); 
   const typingTimeout = 2000;
   const typingTimerRef = useRef(null);
+  const [showEmojiModal, setShowEmojiModal] = useState(false); // State to toggle emoji modal
+  const [selectedEmoji, setSelectedEmoji] = useState(''); // State for selected emoji
+
+  const emojis = [
+    '😁', '😂', '😎', '❤️', '🎉', '😊', '😢', '😡', '🥳', '🔥', '🤩', '✨', '💥', '🎶', '💀', '💯', '🤔', '🙌',
+    '👍', '👎', '👏', '🙏', '💪', '🤷', '🤦', '😅', '😇', '😋', '😌', '😍', '😒', '😓', '😔', '😕', '😖', '😘',
+    '😜', '😝', '😞', '😠', '😩', '😪', '😫', '😭', '😱', '😳', '😵', '😷', '🤐', '🤑', '🤒', '🤓', '🤕', '🤢',
+    '🤧', '🤪', '🤫', '🤭', '🤯', '🥰', '🥵', '🥶', '🥴', '🧐', '🤠', '🥺', '🤤', '😈', '👿', '👻', '💩', '👽',
+    '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻',
+    '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥',
+    '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🐢', '🐍',
+    '🦎', '🦂', '🦀', '🐙', '🦑', '🦐', '🦞', '🐠', '🐟', '🐡', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓',
+    '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🐐', '🦌',
+    '🐕', '🐩', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🐁', '🐀', '🐿', '🦔', '🐾', '🐉', '🐲',
+    '🌵', '🎄', '🌲', '🌳', '🌴', '🌱', '🌿', '☘️', '🍀', '🎍', '🎋', '🍃', '🍂', '🍁', '🍄', '🌾', '💐', '🌷',
+    '🌹', '🥀', '🌺', '🌸', '🌼', '🌻', '🌞', '🌝', '🌛', '🌜', '🌚', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓',
+    '🌔', '🌙', '🌎', '🌍', '🌏', '💫', '⭐', '🌟', '✨', '⚡', '🔥', '💥', '☄️', '☀️', '🌤', '⛅', '🌥', '☁️',
+    '🌦', '🌧', '⛈', '🌩', '🌨', '❄️', '☃️', '⛄', '🌬', '💨', '💧', '💦', '☔', '☂️', '🌊', '🌫'
+  ];
+
+  const addEmojiToMessage = (emoji) => {
+    setNewMessage((prev) => prev + emoji); // Append emoji to the message
+    setShowEmojiModal(false); // Close the modal
+  };
 
   useEffect(() => {
     checkAuth();
@@ -320,6 +344,63 @@ export default function Chatroom() {
         ))}
       </div>
 
+      {/* Emoji Modal */}
+      {showEmojiModal && (
+        <div
+          id="emoji-modal"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'var(--container-bg)',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.6)',
+            zIndex: 1000,
+            width: '300px', // Fixed width
+            height: '400px', // Fixed height
+            overflowY: 'auto', // Enable vertical scrolling
+          }}
+        >
+          <h3 style={{ color: 'var(--accent-color)', marginBottom: '10px' }}>Select an Emoji</h3>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}
+          >
+            {emojis.map((emoji, index) => (
+              <span
+                key={index}
+                style={{
+                  fontSize: '2rem',
+                  cursor: 'pointer',
+                }}
+                onClick={() => addEmojiToMessage(emoji)}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowEmojiModal(false)}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              background: 'var(--accent-color)',
+              color: 'var(--bg-color)',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
+
       {/* Input Section */}
       <form onSubmit={sendMessage}>
         <input
@@ -329,6 +410,7 @@ export default function Chatroom() {
           placeholder="Type a message..."
           onKeyDown={handleTyping}
         />
+        <button type="button" onClick={() => setShowEmojiModal(true)}>😀</button> {/* Emoji Button */}
         <button type="submit">Send</button>
       </form>
     </div>
