@@ -27,6 +27,8 @@ export default function Chatroom() {
   const [showSettingsModal, setShowSettingsModal] = useState(false); // State for settings modal
   const [showRulesModal, setShowRulesModal] = useState(false); // State for rules modal
   const [rulesAccepted, setRulesAccepted] = useState(false); // State to track if rules are accepted
+  const [editingMessageId, setEditingMessageId] = useState(null); // State to track the message being edited
+  const [editedMessage, setEditedMessage] = useState(''); // State for the edited message
 
   const emojis = [
     '😁', '😂', '😎', '❤️', '🎉', '😊', '😢', '😡', '🥳', '🔥', '🤩', '✨', '💥', '🎶', '💀', '💯', '🤔', '🙌',
@@ -214,16 +216,9 @@ export default function Chatroom() {
     const profilePicture =
       user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
   
-    console.log({
-      username,
-      message: newMessage,
-      profile_picture: profilePicture,
-      timestamp,
-      reply_to: replyTo ? replyTo.id : null,
-    });
-  
     await supabase.from('messages').insert([{
       username,
+      email: user.email, // Store the user's email
       message: newMessage,
       profile_picture: profilePicture,
       timestamp,
@@ -343,6 +338,39 @@ export default function Chatroom() {
   const acceptRules = () => {
     setRulesAccepted(true);
     setShowRulesModal(false);
+  };
+
+  const editMessage = async (messageId) => {
+    if (!editedMessage.trim()) {
+      alert('Please enter a valid message.');
+      return;
+    }
+  
+    const { error } = await supabase
+      .from('messages')
+      .update({ message: editedMessage })
+      .eq('id', messageId);
+  
+    if (error) {
+      alert('Error updating message: ' + error.message);
+    } else {
+      setEditingMessageId(null);
+      setEditedMessage('');
+      fetchMessages(); // Refresh messages after editing
+    }
+  };
+  
+  const deleteMessage = async (messageId) => {
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+  
+    if (error) {
+      alert('Error deleting message: ' + error.message);
+    } else {
+      fetchMessages(); // Refresh messages after deleting
+    }
   };
 
   if (loading) {
@@ -491,7 +519,55 @@ export default function Chatroom() {
             <img className="pfp" src={message.profile_picture} alt="profile" />
             <div>
               <strong className="username">{message.username}</strong>
-              <p style={{ margin: '5px 0', color: 'var(--text-color)' }}>{message.message}</p>
+              {editingMessageId === message.id ? (
+                <div>
+                  <input
+                    type="text"
+                    value={editedMessage}
+                    onChange={(e) => setEditedMessage(e.target.value)}
+                    placeholder="Edit your message"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      marginBottom: '10px',
+                      border: '1px solid var(--input-bg)',
+                      borderRadius: '5px',
+                    }}
+                  />
+                  <button
+                    onClick={() => editMessage(message.id)}
+                    style={{
+                      padding: '5px 10px',
+                      background: 'var(--accent-color)',
+                      color: 'var(--bg-color)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      marginRight: '5px',
+                    }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingMessageId(null);
+                      setEditedMessage('');
+                    }}
+                    style={{
+                      padding: '5px 10px',
+                      background: 'var(--danger-color)',
+                      color: 'var(--bg-color)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <p style={{ margin: '5px 0', color: 'var(--text-color)' }}>{message.message}</p>
+              )}
               {message.reply_to && (
                 <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>
                   Replying to: {messages.find((m) => m.id === message.reply_to)?.message || 'Deleted message'}
@@ -504,20 +580,40 @@ export default function Chatroom() {
                   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 })}
               </span>
-              <button
-                onClick={() => setReplyTo(message)}
-                style={{
-                  marginTop: '5px',
-                  padding: '5px 10px',
-                  background: 'var(--accent-color)',
-                  color: 'var(--bg-color)',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Reply
-              </button>
+              {message.username === (user.user_metadata?.full_name || user.email.split('@')[0]) && (
+                <div style={{ marginTop: '5px' }}>
+                  <button
+                    onClick={() => {
+                      setEditingMessageId(message.id);
+                      setEditedMessage(message.message);
+                    }}
+                    style={{
+                      padding: '5px 10px',
+                      background: 'var(--accent-color)',
+                      color: 'var(--bg-color)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      marginRight: '5px',
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteMessage(message.id)}
+                    style={{
+                      padding: '5px 10px',
+                      background: 'var(--danger-color)',
+                      color: 'var(--bg-color)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
