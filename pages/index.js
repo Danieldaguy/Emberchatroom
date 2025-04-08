@@ -216,18 +216,27 @@ export default function Chatroom() {
     const profilePicture =
       user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
 
-    await supabase.from('messages').insert([{
+    const payload = {
       username,
-      email: user.email, // Store the user's email
+      email: user.email,
       message: newMessage,
       profile_picture: profilePicture,
       timestamp,
-      reply_to: replyTo ? replyTo.id : null, // Include the ID of the message being replied to
-    }]);
+      reply_to: replyTo ? replyTo.id : null,
+    };
+
+    console.log('Payload being sent:', payload);
+
+    const { error } = await supabase.from('messages').insert([payload]);
+
+    if (error) {
+      console.error('Error inserting message:', error.message);
+      return;
+    }
 
     setNewMessage('');
-    setReplyTo(null); // Clear the reply state
-    scrollToBottom(); // Scroll to the bottom after sending a message
+    setReplyTo(null);
+    scrollToBottom();
   };
 
   const handleTyping = () => {
