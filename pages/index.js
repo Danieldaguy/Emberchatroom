@@ -210,12 +210,12 @@ export default function Chatroom() {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
-  
+
     const timestamp = new Date().toISOString();
     const username = user.user_metadata?.full_name || user.email.split('@')[0];
     const profilePicture =
       user.user_metadata?.avatar_url || 'https://static.wikia.nocookie.net/logopedia/images/d/de/Roblox_Mobile_HD.png/revision/latest?cb=20230204042117';
-  
+
     await supabase.from('messages').insert([{
       username,
       email: user.email, // Store the user's email
@@ -224,7 +224,7 @@ export default function Chatroom() {
       timestamp,
       reply_to: replyTo ? replyTo.id : null, // Include the ID of the message being replied to
     }]);
-  
+
     setNewMessage('');
     setReplyTo(null); // Clear the reply state
     scrollToBottom(); // Scroll to the bottom after sending a message
