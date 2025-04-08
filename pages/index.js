@@ -992,6 +992,8 @@ export default function Chatroom() {
             boxShadow: '0 8px 25px rgba(0, 0, 0, 0.6)',
             zIndex: 1000,
             width: '400px',
+            maxHeight: '80vh', // Limit the height of the modal
+            overflowY: 'auto', // Enable scrolling if content overflows
           }}
         >
           <h3 style={{ color: 'var(--accent-color)', marginBottom: '10px' }}>Settings</h3>
@@ -1004,10 +1006,184 @@ export default function Chatroom() {
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
+              marginBottom: '20px',
             }}
           >
             Close
           </button>
+
+          {/* Update Username */}
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="new-username" style={{ display: 'block', marginBottom: '5px', color: 'var(--text-color)' }}>
+              New Username:
+            </label>
+            <input
+              type="text"
+              id="new-username"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder="Enter new username"
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: '10px',
+                border: '2px solid var(--input-bg)',
+                borderRadius: '8px',
+                background: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={updateUsername}
+              style={{
+                padding: '10px 20px',
+                background: 'var(--accent-color)',
+                color: 'var(--bg-color)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              Update Username
+            </button>
+          </div>
+
+          {/* Update Password */}
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="current-password" style={{ display: 'block', marginBottom: '5px', color: 'var(--text-color)' }}>
+              Current Password:
+            </label>
+            <input
+              type="password"
+              id="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: '10px',
+                border: '2px solid var(--input-bg)',
+                borderRadius: '8px',
+                background: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                outline: 'none',
+              }}
+            />
+            <label htmlFor="new-password" style={{ display: 'block', marginBottom: '5px', color: 'var(--text-color)' }}>
+              New Password:
+            </label>
+            <input
+              type="password"
+              id="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password"
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: '10px',
+                border: '2px solid var(--input-bg)',
+                borderRadius: '8px',
+                background: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={updatePassword}
+              style={{
+                padding: '10px 20px',
+                background: 'var(--accent-color)',
+                color: 'var(--bg-color)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              Update Password
+            </button>
+          </div>
+
+          {/* Update Profile Picture */}
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="profile-picture" style={{ display: 'block', marginBottom: '5px', color: 'var(--text-color)' }}>
+              Profile Picture (URL or Upload):
+            </label>
+            <input
+              type="text"
+              id="profile-picture"
+              value={profilePicture}
+              onChange={(e) => setProfilePicture(e.target.value)}
+              placeholder="Enter image URL"
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: '10px',
+                border: '2px solid var(--input-bg)',
+                borderRadius: '8px',
+                background: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                outline: 'none',
+              }}
+            />
+            <input
+              type="file"
+              onChange={(e) => setProfilePictureFile(e.target.files[0])}
+              style={{
+                marginBottom: '10px',
+              }}
+            />
+            <button
+              onClick={updateProfilePicture}
+              style={{
+                padding: '10px 20px',
+                background: 'var(--accent-color)',
+                color: 'var(--bg-color)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              Update Profile Picture
+            </button>
+          </div>
+
+          {/* Theme Selector */}
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="theme-dropdown" style={{ display: 'block', marginBottom: '5px', color: 'var(--text-color)' }}>
+              Theme:
+            </label>
+            <select
+              id="theme-dropdown"
+              value={theme}
+              onChange={(e) => {
+                const newTheme = e.target.value;
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+                document.body.setAttribute('data-theme', newTheme);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid var(--input-bg)',
+                borderRadius: '8px',
+                background: 'var(--input-bg)',
+                color: 'var(--text-color)',
+                outline: 'none',
+              }}
+            >
+              <option value="default">Default</option>
+              <option value="sunset">Sunset</option>
+              <option value="fire">Fire</option>
+              <option value="blue-fire">Blue Fire</option>
+              <option value="void">Void</option>
+              <option value="acid">Acid</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
         </div>
       )}
     </div>
